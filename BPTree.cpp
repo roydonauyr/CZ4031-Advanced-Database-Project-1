@@ -36,148 +36,143 @@ class BPTree
 	Node *root;
 
 	// TODO
-	void insertKey(keyStruct key, Node *currNode, Node *child)
+	void insertInternal(keyStruct key, Node *currNode, Node *child)
 	{
-		// case 1: no overflow
-		if (currNode->size < MAX)
-		{
+		// if parent (current node) still has space, we can add the child node as a pointer
+		if (currNode->size < max keys) {
 			int i = 0, j;
 
-			// Traverse the child node
-			// for current cursor node
-			while (key.value > currNode->key[i].value && i < currNode->size)
-			{
+			// iterate through the parent to see where to put in the lower bound key for the new child
+			while (key.value > currNode->key[i].value && i < currNode->size) {
 				i++;
 			}
 
-			// Traverse the cursor node
-			// and update the current key
-			// to its previous node key
-			for (j = currNode->size; j > i; j--)
-			{
-
+			// using index i, move the larger keys backwards
+			for (j = currNode->size; j > i; j--) {
 				currNode->key[j] = currNode->key[j - 1];
 			}
 
-			// Traverse the cursor node
-			// and update the current ptr
-			// to its previous node ptr
-			for (j = currNode->size + 1; j > i + 1; j--)
-			{
+			// shift all pointers right
+			for (j = currNode->size + 1; j > i + 1; j--) {
 				currNode->ptr[j] = currNode->ptr[j - 1];
 			}
 
+			// add in new child's lower bound key and pointer to the parent
 			currNode->key[i] = key;
 			currNode->size++;
+			// rightmost pointer will point to new child node
 			currNode->ptr[i + 1] = child;
 		}
 
-		// case 2: overflow, break the node
-		else
-		{
-
-			// create new internal node
+		// if parent node no space, recursively split parent node and insert more parent nodes
+		else {
+			// TODO: create new internal node
+			/*
 			Node *newInternal = new Node;
+			*/
+
+			// create new templist to store the keys
 			keyStruct virtualKey[MAX + 1];
 			Node *virtualPtr[MAX + 2];
-			int i;
 
-			// Insert the current list key of cursor node to virtualKey
-			for (i = 0; i < MAX; i++)
-			{
+			// copy current list of keys to temp key list
+			for (int i = 0; i < max keys; i++) {
 				virtualKey[i] = currNode->key[i];
 			}
 
-			// Insert the current list ptr of cursor node to virtualPtr
-			for (i = 0; i < MAX + 1; i++)
-			{
+			// copy all pointers to temp pointer list
+			// there is one more pointer than keys, so maxKeys + 1.
+			for (int i = 0; i < max keys + 1; i++) {
 				virtualPtr[i] = currNode->ptr[i];
 			}
 
 			int i = 0, j;
 
-			// Traverse to find where the new node is to be inserted
-			while (key.value > virtualKey[i].value && i < MAX)
-			{
+			// traverse to find where the new node is to be inserted in temp key list
+			while (key.value > virtualKey[i].value && i < max keys) {
 				i++;
 			}
 
-			// Traverse the virtualKey node and update the current key to its previous node key
-			for (j = MAX + 1; j > i; j--)
+			// move keys backwards to make space for insertion
+			for (j = max keys + 1; j > i; j--)
 			{
 				virtualKey[j] = virtualKey[j - 1];
 			}
 
+			// insert new key into temp key list
 			virtualKey[i] = key;
 
-			// Traverse the virtualKey node and update the current ptr to its previous node ptr
-			for (j = MAX + 2; j > i + 1; j--)
-			{
+			// move ptrs backwards
+			for (j = max keys + 2; j > i + 1; j--) {
 				virtualPtr[j] = virtualPtr[j - 1];
 			}
 
+			// insert a ptr to the child to the right of its key
 			virtualPtr[i + 1] = child;
 			newInternal->IS_LEAF = false;
 
-			currNode->size = (MAX + 1) / 2;
+			// split new node into 2
+			currNode->size = (max keys + 1) / 2;
+			newInternal->size = max keys - (max keys + 1) / 2;
 
-			newInternal->size = MAX - (MAX + 1) / 2;
-
-			// Insert new node as an internal node
-			for (i = 0, j = currNode->size + 1; i < newInternal->size; i++, j++)
-			{
+			// insert new keys into new internal parent node from temp key list
+			for (i = 0, j = currNode->size + 1; i < newInternal->size; i++, j++) {
 				newInternal->key[i] = virtualKey[j];
 			}
 
-			for (i = 0, j = currNode->size + 1; i < newInternal->size + 1; i++, j++)
-			{
+			// insert new ptrs into new internal parent node from temp ptr list
+			for (i = 0, j = currNode->size + 1; i < newInternal->size + 1; i++, j++) {
 				newInternal->ptr[i] = virtualPtr[j];
 			}
 
-			// If cursor is the root node
-			if (currNode == root)
-			{
+			// if current node is the root node, create a new root node
+			if (currNode == root) {
 
-				// Create a new root node
+				// TODO: create a new root node
+				/*
 				Node *newRoot = new Node;
+				*/
 
-				// Update key value
+				// use rightmost key of old parent to be root
 				newRoot->key[0] = currNode->key[currNode->size];
 
-				// Update rest field of B+ Tree Node
+				// update 2 children
 				newRoot->ptr[0] = currNode;
 				newRoot->ptr[1] = newInternal;
+				// set other fields
 				newRoot->IS_LEAF = false;
 				newRoot->size = 1;
+
 				root = newRoot;
 			}
-			else
-			{
-				// Recursive Call to insert the data
+			// if parent is internal, need to split and make another new parent
+			else {
+				// recursive Call to insert the data
 				insertInternal(currNode->key[currNode->size], findParent(root, currNode), newInternal);
 			}
 		}
 	}
 
+	// finds parent using depth first traversal and ignores leaf nodes as they cannot be parents
 	Node *findParent(Node *currNode, Node *child)
 	{
 		Node *parent;
-		if (currNode->IS_LEAF || (currNode->ptr[0])->IS_LEAF)
-		{
+
+		// leaf node == not a parent 
+		if (currNode->IS_LEAF || (currNode->ptr[0])->IS_LEAF) {
 			return NULL;
 		}
-		for (int i = 0; i < currNode->size + 1; i++)
-		{
-			if (currNode->ptr[i] == child)
-			{
-				parent = cursor;
+
+		for (int i = 0; i < currNode->size + 1; i++) {
+			if (currNode->ptr[i] == child) {
+				parent = currNode;
 				return parent;
 			}
-			else
-			{
+			else {
 				parent = findParent(currNode->ptr[i], child);
-				if (parent != NULL)
+				if (parent != NULL) {
 					return parent;
+				}
 			}
 		}
 		return parent;
@@ -186,132 +181,146 @@ class BPTree
 public:
 	void insert(keyStruct key)
 	{
-		// If root is null then return newly created node
-		if (root == NULL)
-		{
+		// if there is no root, create new B+ tree root
+		if (root == NULL) {
+			// TODO: create a new node 
+			// root == new node
+			/*
 			root = new Node;
 			root->key[0] = key;
 			root->IS_LEAF = true;
-			root->size = 1;
+			root->size = 1; 
+			*/
 		}
 
-		// Traverse the B+ Tree
-		else
-		{
+		// if there is already a root node, traverse the b+ tree to see where to insert
+		else {
 			Node *currNode = root;
 			Node *parent;
 
-			/////// search res?
-			// Till cursor reaches the leaf node
-			while (currNode->IS_LEAF == false)
-			{
-
+			// while not leaf, traverse the tree to correct key
+			while (currNode->IS_LEAF == false) {
 				parent = currNode;
 
-				for (int i = 0; i < currNode->size; i++)
-				{
-					// If found the position where we have to insert node
-					if (key < currNode->key[i])
-					{
+				// check through all keys of the node to find key and pointer to follow downwards
+				for (int i = 0; i < currNode->size; i++) {
+					// if found correct position to insert node
+					if (key < currNode->key[i]) {
 						currNode = currNode->ptr[i];
 						break;
 					}
 
-					// If reaches the end
-					if (i == currNode->size - 1)
-					{
+					// if reached the end, aka key is larger than all keys in the node
+					if (i == currNode->size - 1) {
 						currNode = currNode->ptr[i + 1];
 						break;
 					}
 				}
 			}
 
-			if (currNode->size < MAX)
-			{
+			// now at a leaf node where we want to insert the key
+			// if the leaf node still has capacity for more keys
+			if (currNode->size < max num of keys) {
 				int i = 0;
-				while (key > currNode->key[i] && i < currNode->size)
-				{
+
+				// while we haven't reached the last key and the key we want to insert is larger than current key
+				while (key > currNode->key[i] && i < currNode->size) {
 					i++;
 				}
 
-				for (int j = currNode->size; j > i; j--)
-				{
+				// shift all the keys back to insert the current key
+				// i is the index we want to put the key in
+				for (int j = currNode->size; j > i; j--) {
 					currNode->key[j] = currNode->key[j - 1];
 				}
 
+				// insert new key here
 				currNode->key[i] = key;
+				// increment size of node inserted into
 				currNode->size++;
 
-				currNode->ptr[currNode->size] = currNode->ptr[cursor->size - 1];
+				// adjust pointer to next leaf node to be on the last index, previously was on second last
+				// set second last index as NULL
+				currNode->ptr[currNode->size] = currNode->ptr[currNode->size - 1];
 				currNode->ptr[currNode->size - 1] = NULL;
 			}
 
-			else
-			{
-				// Create a newLeaf node
+			// overflow: no space to insert new key, so we have to split this node into two 
+			else {
+				// TODO: create a newLeaf node
+				/*
 				Node *newLeaf = new Node;
+				*/
+
+				//create temp list
 				keyStruct virtualNode[MAX + 1];
 
-				// Update cursor to virtual node created
-				for (int i = 0; i < MAX; i++)
-				{
+				// update cursor to virtual node created
+				// copy all keys to temp list
+				for (int i = 0; i < MAX; i++) {
 					virtualNode[i] = currNode->key[i];
 				}
 				int i = 0, j;
 
-				// Traverse to find where the new node is to be inserted
-				while (key.value > virtualNode[i].value && i < MAX)
-				{
+				// traverse to find where the new node is to be inserted, inside the temp list
+				while (key.value > virtualNode[i].value && i < max num of keys) {
 					i++;
 				}
 
-				// Update the current virtual Node to its previous
-				for (j = MAX + 1; j > i; j--)
-				{
+				// move other keys larger than the current key backwards to make space
+				for (j = max keys + 1; j > i; j--) {
 					virtualNode[j] = virtualNode[j - 1];
 				}
 
-				virtualNode[i] = x;
+				// insert the key into the temp list
+				virtualNode[i] = key;
+
+				// mark the new node created newLeaf as a leaf node
 				newLeaf->IS_LEAF = true;
 
-				currNode->size = (MAX + 1) / 2;
-				newLeaf->size = MAX + 1 - (MAX + 1) / 2;
+				// split node into 2
+				// current node will be start of left half, new node will be start of right half
+				currNode->size = (max keys + 1) / 2;
+				newLeaf->size = max keys + 1 - (max keys + 1) / 2;
 
+				// set pointer of current node to point to new node
 				currNode->ptr[currNode->size] = newLeaf;
 
-				newLeaf->ptr[newLeaf->size] = currNode->ptr[MAX];
-
+				// set pointer of new node to point to next node
+				newLeaf->ptr[newLeaf->size] = currNode->ptr[max keys];
 				currNode->ptr[MAX] = NULL;
 
-				// Update the current virtual node's key to its previous
-				for (i = 0; i < currNode->size; i++)
-				{
+				// add in the keys to the current node from the templist
+				for (i = 0; i < currNode->size; i++) {
 					currNode->key[i] = virtualNode[i];
 				}
 
-				// Update the newLeaf key to virtual Node
-				for (i = 0, j = currNode->size; i < newLeaf->size; i++, j++)
-				{
+				// add in the keys to the new node from the templist
+				// need to keep track of index j since using remaining keys from current node
+				for (i = 0, j = currNode->size; i < newLeaf->size; i++, j++) {
 					newLeaf->key[i] = virtualNode[j];
 				}
 
-				// If cursor is the root node
-				if (currNode == root)
-				{
-					// Create a new Node
+				// if we are at root (root == leaf), we need to make a new parent root
+				if (currNode == root) {
+					// TODO: create a new Node for root
+					/*
 					Node *newRoot = new Node;
+					*/
 
-					// Update rest field of
-					// B+ Tree Node
+					// update the rest of the B+ tree
+					// set new root's key to be the left bound of the right child
 					newRoot->key[0] = newLeaf->key[0];
+					// set pointers
 					newRoot->ptr[0] = currNode;
 					newRoot->ptr[1] = newLeaf;
+					// set other fields
 					newRoot->IS_LEAF = false;
 					newRoot->size = 1;
 					root = newRoot;
 				}
-				else
-				{
+				// if it is not the root, insert a new parent in the internal nodes of the tree
+				else {
 
 					// Recursive Call for insert in internal
 					insertInternal(newLeaf->key[0], parent, newLeaf);
