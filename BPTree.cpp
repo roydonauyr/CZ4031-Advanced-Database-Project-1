@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-//#include "storage.cpp"
+#include "Database_Storage.cpp"
 
 using namespace std;
 
@@ -331,7 +331,67 @@ public:
 
 	// TODO: test this function
 	void deleteKey(keyStruct key, Node *currNode, Node *child)
-	{ // Set currNode and child to NULL on first run
+	{
+		// Set currNode and child to NULL on first run
+		// if key is not valid, return
+		// 
+		// if currNode is root
+		//	if there is only 1 key in the root
+		//		set 1 of the children (key != key to be deleted) as root
+		//		delete old root (i.e. currNode)
+		//	if root is empty
+		//		delete root
+		// else if currNode is null
+		//	for each non-leaf node in B+ tree
+		//		record parent, leftSibling and rightSibling of currNode
+		//		for each key[i] in node
+		//			if key < key[i] (i.e. key potentially found)
+		//				go to child node via ith pointer
+		//				break
+		//	instantiate deleted = false and index = 0 (to check if key is found and the key's index within the node)
+		//	for each key in currNode (currNode is a leaf node)
+		//		if key == key in leaf node
+		//			deleted = false
+		//			index = key's current index
+		//	if deleted = false (i.e. key not found)
+		//		return
+		//	for each key in currNode after index
+		//		move pointer and key 1 index forward
+		// else
+		//	if currNode is leaf && remaining keys >= floor((n + 1) / 2) || currNode is not leaf && remaining keys >= floor(n / 2) (i.e. case 1)
+		// 		delete(key, parent) (delete key from parent if necessary)
+		//		return
+		//	else
+		//		instantiate leftNode, rightNode and redundantKey
+		//		if leftSibling exists
+		//			leftNode = node at leftSibling
+		//		if rightSibling exists
+		//			rightNode = node at rightSibling
+		//		if (leftNode is leaf && keys >= floor((n + 1) / 2)) || (leftNode is not leaf && keys >= floor(n / 2)) (case 2)
+		//			create space for transfer (if needed)
+		//			transfer a key from leftNode to currNode
+		//			redundantKey = transferred key
+		//			delete redundantKey in leftNode
+		//			delete(redundantKey, parent)
+		//			return
+		//		else if (leftNode is leaf && keys >= floor((n + 1) / 2)) || (leftNode is not leaf && keys >= floor(n / 2)) (case 2)
+		//			create space for transfer (if needed)
+		//			transfer a key from rightNode to currNode
+		//			redundantKey = transferred key
+		//			delete redundantKey in rightNode
+		//			delete(redundantKey, parent)
+		//			return
+		//		else (case 3)
+		//			if leftNode != null (i.e. leftNode exists)
+		//				merge leftNode and currNode
+		//				delete currNode from parent
+		//			else if rightNode != null (i.e. rightNode exists)
+		//				merge currNode and rightNode
+		//				delete currNode from parent
+		//			delete currNode
+		//			delete(key, parent)
+		//			return
+ 
 		// Check if key is valid
 		if (key == NULL)
 		{
