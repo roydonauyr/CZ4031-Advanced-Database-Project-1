@@ -26,15 +26,27 @@ struct RecordBlock{
 class Pointer{
 public:
     char entry; // Points to exact record, for dense index leaf nodes
+    // We can use a negative value to indicate it does not point to data. Hence we know that it points to a tree
 private:
     unsigned char block[3]; // Points to block. 0 should be a special value.
     // Block is accessed as [2],[1],[0]
     // This is private, we will use getters and setters here.
 };
 
+// Super class of blocks to check type of blocks to cast accordingly.
+class block{
+
+};
+
 // 200B block
 class treeNodeBlock{
-    unsigned int key[24];
+public:
+    unsigned int key[24]; // Minimum is 5, so we make 0 a special value.
     Pointer ptrs[25];
-    char padding[4];
+    unsigned int type;
+    unsigned int getLength(){
+        //TODO
+    }
+private:
+    unsigned char block[3];
 };
