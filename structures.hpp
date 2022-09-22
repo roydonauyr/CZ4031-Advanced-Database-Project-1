@@ -21,3 +21,20 @@ struct RecordBlock{
         return (RecordBlock*)(blockPtr); //UNSAFE
     }
 };
+
+//4 Bytes to save space. Oh no help me the bytewise manipulations
+class Pointer{
+public:
+    char entry; // Points to exact record, for dense index leaf nodes
+private:
+    unsigned char block[3]; // Points to block. 0 should be a special value.
+    // Block is accessed as [2],[1],[0]
+    // This is private, we will use getters and setters here.
+};
+
+// 200B block
+class treeNodeBlock{
+    unsigned int key[24];
+    Pointer ptrs[25];
+    char padding[4];
+};
