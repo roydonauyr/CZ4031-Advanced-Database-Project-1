@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <string>
 
 #pragma pack(1)
 // Ugh so to explain, pragma pack forces the compiler to not add padding.
@@ -16,6 +17,20 @@ public:
     char tconst[10];
     fixedPoint avgRating;
     unsigned int numVotes;
+    std::string getTconst(){
+        char buf[11];
+        strncpy(buf, this->tconst, 10);
+        buf[11] = '\0';
+        return std::string(buf);
+    }
+
+    void setTconst(std::string input){
+        memset(tconst,0,10);
+        strncpy(tconst,input.c_str(),10);
+    }
+
+private:
+    char tconst[10];
 };
 
 // Super class of blocks to check type of blocks to cast accordingly.
@@ -72,15 +87,15 @@ public:
         return key.size() - std::count(key.cbegin(), key.cend(), 0);
     }
 
-    unsigned long getBlock(){
-        return (block[2] << 16) + (block[1] << 8) + block[0];
+    unsigned long getParentBlock(){
+        return (parentBlock[2] << 16) + (parentBlock[1] << 8) + parentBlock[0];
     }
 
-    void setBlock(unsigned long blockNum){
-        block[2] = blockNum & 0xFF0000;
-        block[1] = blockNum & 0xFF00;
-        block[0] = blockNum & 0xFF;
+    void setParentBlock(unsigned long blockNum){
+        parentBlock[2] = blockNum & 0xFF0000;
+        parentBlock[1] = blockNum & 0xFF00;
+        parentBlock[0] = blockNum & 0xFF;
     }
 private:
-    unsigned char block[3];
+    unsigned char parentBlock[3];
 };
