@@ -1,3 +1,6 @@
+#ifndef STRUCTURES_HEADER
+#define STRUCTURES_HEADER
+
 #include <algorithm>
 #include <array>
 #include <string>
@@ -14,7 +17,6 @@ struct fixedPoint{
 // 16 bytes Record
 struct Record{
 public:
-    char tconst[10];
     fixedPoint avgRating;
     unsigned int numVotes;
     std::string getTconst(){
@@ -99,3 +101,5 @@ public:
 private:
     unsigned char parentBlock[3];
 };
+
+#endif

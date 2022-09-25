@@ -1,3 +1,6 @@
+#ifndef STORAGE_HEADER
+#define STORAGE_HEADER
+
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -111,7 +114,4 @@ block * BlockManager::accessBlock(unsigned int index) const{
     return blockPtrArray[index];
 }
 
-
-int main(){
-
-}
+#endif
