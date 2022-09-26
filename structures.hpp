@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <string>
+#include <cstring>
 
 #pragma pack(1)
 // Ugh so to explain, pragma pack forces the compiler to not add padding.
