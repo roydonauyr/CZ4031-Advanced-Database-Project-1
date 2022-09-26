@@ -642,8 +642,8 @@ public:
 		}
 	}
 
-	// TODO
-	void searchKeys(int x)
+	// If There is multiple entries then print only the first five
+	void searchKeys(int key)
 	{
 		if (root == NULL)
 		{
@@ -652,29 +652,34 @@ public:
 		else
 		{
 			Node *cursor = root;
-			// until you find a leaf node
+			// While loop until you find a leaf node
 			while (cursor->IS_LEAF == false)
 			{
+				// Apply binary search and once find the
 				for (int i = 0; i < cursor->size; i++)
 				{
-					if (x < cursor->key[i])
+					if (key < cursor->item[i])
 					{
-						cursor = cursor->ptr[i];
+						// find child node
+						cursor = cursor->children[i];
 						break;
 					}
 					if (i == (cursor->size) - 1)
 					{
-						cursor = cursor->ptr[i + 1];
+						cursor = cursor->children[i + 1];
 						break;
 					}
 				}
 			}
 			for (int i = 0; i < cursor->size; i++)
 			{
-				if (cursor->key[i] == x)
+				if (cursor->item[i] == key)
 				{
 					// Print out key details as well
-					cout << "Found\n";
+					// Check next children whether its the same key
+					// If key is the same need to print also
+					// Total five times if more than five
+					// Another While loop
 					return;
 				}
 			}
@@ -686,39 +691,32 @@ public:
 	// TODO
 	void searchRangeOfKeys(int LowerBound, int UpperBound)
 	{
-		// search logic
-		if (root == NULL)
+		int index = 0;
+		// need to search for the lower bound first that
+		// transfer the point to var start_node
+		cursor = start_node;
+		temp = cursor->item[0];
+
+		while (temp <= end)
 		{
-			// empty
-			// cout<<"Tree empty\n";
-		}
-		else
-		{
-			CurPtr = rootNode;
-			// in the following while loop, cursor will travel to the leaf node possibly consisting the key
-			while (CurPtr != Leaf_Node)
+			if (cursor == nullptr)
 			{
-				// use the totalSizeDB as ending point of loop
-				for (int i = 0; i < TotalSizeDB; i++)
+				break;
+				// for empty b+ tree
+			}
+			for (int i = 0; i < cursor->size; i++)
+			{
+				temp = cursor->item[i];
+				if ((temp >= LowerBound) && (temp <= UpperBound))
 				{
-					if (LowerBound < CurPtr->key[i] && UpperBound <= CurPtr->key[i])
-					{
-						CurPtr = CurPtr->ptr[i];
-						// cout<<"Found\n";
-						// print values of the CurPtr experiemnt 3 requires
-						// the number and the content of data blocks the process accesses
-						// the average of “averageRating’s” of the records that are returned
-						break;
-					}
-					// if (i == CurPtr->size - 1)
-					// {
-					//     CurPtr = CurPtr->ptr[i + 1];
-					//     break;
-					// }
+					// print the number and the content of index
+					// print the number and the content of data blocks
+					// print the average of "averageRating" of the records
+					index++;
 				}
 			}
-			cout << "Not Found\n" print("NotFound")
-			// cout<<"Not found\n";
+			cursor = cursor->children[cursor->size];
 		}
+		return index;
 	}
 };
