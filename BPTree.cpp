@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "Database_Storage.cpp"
+#include "Database_Storage.hpp"
 
 using namespace std;
 
@@ -33,7 +33,7 @@ public:
 // TODO
 class BPTree
 {
-	Node *root;
+	treeNodeBlock *root; //correct?
 
 	// TODO
 	void insertInternal(keyStruct key, Node *currNode, Node *child)
@@ -645,6 +645,12 @@ public:
 	// If There is multiple entries then print only the first five
 	void searchKeys(int key)
 	{
+		if(root == nullptr) {
+			cout << "Tree is empty\n" << endl;
+		} else {
+
+		}
+		
 		if (root == NULL)
 		{
 			cout << "Tree is empty\n";
@@ -689,11 +695,43 @@ public:
 	}
 
 	// TODO
+	// **RecordBlock i think?
 	void searchRangeOfKeys(int LowerBound, int UpperBound)
 	{
+
+		block *cursor;
+		if(root != NULL) {
+			if(cursor->type == 0) {
+				RecordBlock *curr = (RecordBlock *) cursor;
+				for(int i = 0; i < 12; i++) {
+					if(curr->records[i] != nullptr) {
+						cout << curr->records[i].avgRating << endl;
+					}
+				}
+			} else if (cursor->type == 1) {
+				treeNodeBlock *curr = (treeNodeBlock *)cursor;
+			}
+			int size = root->getLength();
+
+			int curr_key = root->key[0];
+
+			while (curr_key <= UpperBound)
+			{
+				if (cursor == nullptr)
+				{
+					break;
+					// for empty b+ tree
+				}
+				else if (cursor->type == 1)
+				{
+				}
+			}
+		}
+
 		int index = 0;
 		// need to search for the lower bound first that
 		// transfer the point to var start_node
+	
 		cursor = start_node;
 		temp = cursor->item[0];
 
