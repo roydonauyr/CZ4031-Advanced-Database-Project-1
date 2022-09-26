@@ -33,8 +33,13 @@ public:
 // TODO
 class BPTree
 {
-	treeNodeBlock *root; //correct?
+	BlockManager *blkManager;
+	
+	unsigned int rootNode; //Stores index of root node
 
+	BPTree(BlockManager *mgr){
+		this->blkManager = mgr;
+	}
 	// TODO
 	void insertInternal(keyStruct key, Node *currNode, Node *child)
 	{
