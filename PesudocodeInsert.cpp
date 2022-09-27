@@ -258,7 +258,11 @@ void insertInternal(key, Node *currNode, Node *child){
             currNode->Ptr[k] = null or 0
         }
 
-        
+        //NOT SURE ON THIS SPLIT BECAUSE TECHNICALLY INTERNAL NODE
+        //NEW NODE SHOULD BE ONE LESS SINCE AFTER SPLIT
+        //EG: 6 KEYS, 3 KEYS On LEFT, only 2 on the right since 
+        // SHOULD be 7 pointers, 4 on the left, 3 on the right
+        // SO SHOULD WE DROP THE FIRST KEY ON THE NEW NODE SINCE NOT NEEDED?
         //currNode should take ceiling of (max keys + 1) / 2
         // new node should take floor of (max keys + 1) / 2
         //must import library cmath
