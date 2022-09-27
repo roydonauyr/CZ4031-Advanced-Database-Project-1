@@ -25,13 +25,13 @@ Insert(key, ptr){
 
         //Now i am at the correct spot for insertion
         //Check if there is still space for insertion
-        If (currNode->getlength() < currNode->key.size()){
+        if (currNode->getlength() < currNode->key.size()){
             Int i = 0
             While (key > currNode -> key[i] && i < currNode->key.size()){
                 i++;
             }
                 
-            If (currNode -> key[i] == key){
+            if (currNode -> key[i] == key){
 
                 //Check if it is pointing to a linkedlist block if not must creat
                 if(currNode -> ptr[i] -> type == 3){
@@ -64,11 +64,11 @@ Insert(key, ptr){
         }else{
             //First check if duplicate
             Int i = 0
-            While (key > currNode -> key[i] && i < currNode->key.size()){
+            while (key > currNode -> key[i] && i < currNode->key.size()){
                 i++;
             }
                 
-            If (currNode -> key[i] == key){
+            if (currNode -> key[i] == key){
 
                 //Check if it is pointing to a linkedlist block if not must creat
                 if(currNode -> ptr[i] -> type == 3){
@@ -113,6 +113,7 @@ Insert(key, ptr){
             // Create a new leaf node
             Node newleaf..... 
             set type as 1
+            // Pad everything as 0 when create
 
             // clear curNode keys and ptr
             for (int k = 0; k<currNode->key.size(); k++){
@@ -162,9 +163,13 @@ Insert(key, ptr){
                 Root->type = 1;
                 //Save new root address
                 root = Root;
+                
+                //Update parent address
+                currNode parent address = root
+                newLeaf parent address = root
             }else{
                 //Recursive Call for insert in internal
-                insertInternal()
+                insertInternal(newLeaf->key[0], currNode parent address, newLeaf);
             }
 
         }		
@@ -174,5 +179,151 @@ Insert(key, ptr){
 
     }		
 }
+
+//current node is now parent
+void insertInternal(key, Node *currNode, Node *child){
+    
+    //if parent (current node) still has space, we can add the child node as a pointer
+    if (currNode->getLength() < currNode->key.size()){
+        int i = 0, j;
+
+        while(key > currNode->key[i] && i < currNode->getLength()){
+            i++;
+        }
+
+        // using index i, move larger keys backwards
+        for (j = currNode -> key.size(); j > i; j--){
+            currNode->key[j] = currNode->key[j-1]
+        }
+
+        //shift pointers right, i+1 because ptr is now on right of key
+        for (j = currNode->key.size()+1; j>i+1; j--){
+            cuurNode->ptr[j] = currNode->ptr[j-1]
+        }
+
+        //add in new child lower bound key and pointer to parent
+        currNode->key[i] = key;
+        currNode->ptr[i+1] = child;
+
+        //update parent address for child (Which is new leaf)
+        child->parent = currNode
+
+    }else{ // If parent node no more space, recursively split parent node
+
+        // No space hence need to split node
+        // create temp list and increase space for insert
+        tempkey[currNode->getLength()+1];
+        //temp ptr does not include last ptr to next leaf node hence same length as keys
+        tempPtr[currNode->getLength()+1];
+
+        int i = 0
+        while (key > currNode -> key[i] && i < currNode->key.size()){
+            i++;
+        }
+
+        for (int k= 0; k< i; k++){
+            tempkey[k] = currNode-> key[k]
+        }
+
+        for (int k= 0; k< i+1; k++){
+            tempPtr[k] = currNode-> ptr[k]
+        }
+
+        tempkey[i] = key
+        tempPtr[i+1] = child
+
+        // to be used later at ceiling to update its parent
+        // depending on the node split
+        child_pos = i+1
+
+        // k-1 since starting from where we left off in currNode which is at i
+        for (int k = i+1; k<currNode->getLength()+1; k++){
+            tempkey[k] = currNode-> key[k-1]
+        }
+
+        for (int k = i+2; k<currNode->getLength()+2; k++){
+            tempPtr[k] = currNode-> ptr[k-1]
+        }
+
+        // Create a new node
+        Node newInternal..... 
+        set type as 1
+
+        // clear curNode keys and ptr
+        for (int k = 0; k<currNode->key.size(); k++){
+            currNode->key[k] = 0
+        }
+
+        for (int k = 0; k<currNode->key.size()+1; k++){
+            currNode->Ptr[k] = null or 0
+        }
+
+        
+        //currNode should take ceiling of (max keys + 1) / 2
+        // new node should take floor of (max keys + 1) / 2
+        //must import library cmath
+        currNodetakes = ceil(currNode->key.size()/2)
+        
+        for (int k = 0; k<currNodetakes; k++){
+            currNode->key[k] =  tempkey[k]
+        }
+
+        for (int k = 0; k<currNodetakes+1; k++){
+            currNode->ptr[k] =  tempPtr[k]
+        }
+
+        for (int k = currNodetakes; k< tempkey.size(); k++){
+            newInternal->key[k-currNodetakes] =  tempkey[k]
+        }
+
+        for (int k = currNodetakes+1; k< tempPtr.size(); k++){
+            newInternal->ptr[k-currNodetakes+1] =  tempPtr[k]
+        }
+
+        // Update childs parent first
+        if (child_pos <= currNodetakes-1){
+            child-> parent address = currNode
+        }else{
+            child-> parent address = newInternal
+        }
+
+
+        // Check if current node is root node
+        // If it is need to create a new root
+        if(currNode == root){
+                //create a new root
+                Node Root
+
+                // LB of root
+                Root-> key[0] = newInternal -> key[0]
+
+                Root-> ptr[0] = currNode;
+                Root-> ptr[1] = newInternal;
+
+                Root->type = 1;
+                //Save new root address
+                root = Root;
+                
+                //Update parent address
+                currNode parent address = root
+                newInternal parent address = root
+        }else{
+            //Recursive Call for insert in internal
+
+            //To find the key to pass in (LB of the child node)
+            temp = newInternal
+            while(temp -> type != 1){ // type leaf node
+                temp = temp->Ptr[0]
+            }
+            key = temp->key[0]
+            insertInternal(key, currNode parent address, newInternal);
+        }
+
+
+    }
+
+}
+
+
 	
 	
