@@ -277,7 +277,7 @@ void insertInternal(key, Node *currNode, Node *child){
         }
 
         for (int k = currNodetakes+1; k< tempPtr.size(); k++){
-            newInternal->ptr[k-currNodetakes+1] =  tempPtr[k]
+            newInternal->ptr[k-currNodetakes-1] =  tempPtr[k]
         }
 
         // Update childs parent first
