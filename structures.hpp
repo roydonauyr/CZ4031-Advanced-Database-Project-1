@@ -40,7 +40,7 @@ private:
 class block{
 public:
     unsigned char type; // Check this value before casting your block into the derived classes.
-    // 0: recordBlock, 1: tree non-leaf, 2: tree leaf
+    // 0: recordBlock, 1: tree non-leaf, 2: tree leaf, 3: linked list pointer block
 };
 
 // TODO: Change array sizes based on dynamic calculation
@@ -97,6 +97,12 @@ public:
     }
 private:
     unsigned char parentBlock[3];
+};
+
+class linkedListNodeBlock: public block{
+    char padding[3];
+    Pointer pointers[48];
+    Pointer nextBlock;
 };
 
 #endif
