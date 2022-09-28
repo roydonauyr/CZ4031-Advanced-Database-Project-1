@@ -53,10 +53,6 @@ struct RecordBlock: public block{
     static RecordBlock* voidToRecord(void* blockPtr){
         return (RecordBlock*)(blockPtr); //UNSAFE
     }
-
-    unsigned char getType(){
-        return this->type;
-    }
 };
 
 //4 Bytes to save space. Oh no help me the bytewise manipulations
