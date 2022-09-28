@@ -11,8 +11,7 @@
 
 using namespace std;
 
-// TODO
-int main() {
+std::vector<Record> loadData(){
     std::ifstream dataFile;
     dataFile.open("data.tsv");
     dataFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -33,6 +32,12 @@ int main() {
         dataFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         dataFile.peek();
     }
+    return Records;
+}
+
+// TODO
+int main() {
+    std::vector<Record> Records = loadData();
 
     BlockManager blkManager;
     const unsigned int numBlocksStore = (unsigned int) ceil((float)Records.size() / (float)blkManager.recordsPerBlock);
@@ -47,4 +52,7 @@ int main() {
         }
         i++;
     }
+
+    std::cout<<"Number of blocks used by storage is: "<<numBlocksStore<<std::endl;
+    std::cout<<"Size used by storage is: "<<numBlocksStore * blkManager.blkSize<<"B"<<std::endl;
 }

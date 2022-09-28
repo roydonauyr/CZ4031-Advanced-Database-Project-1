@@ -55,9 +55,6 @@ struct RecordBlock: public block{
     
     char padding[BLOCK_SIZE-(NUM_RECORDS*16+1)]; //Currently there for padding purposes, we can use this for something else later
 
-    static RecordBlock* voidToRecord(void* blockPtr){
-        return (RecordBlock*)(blockPtr); //UNSAFE
-    }
 };
 
 //4 Bytes to save space. Oh no help me the bytewise manipulations

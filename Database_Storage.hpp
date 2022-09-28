@@ -15,8 +15,10 @@ private:
     std::vector <block *> blockPtrArray;
 
 public:
-    const int blkSize = 200;
-    const char recordsPerBlock = 12;
+    const int blkSize = BLOCK_SIZE;
+    const char recordsPerBlock = NUM_RECORDS;
+    const char keyPerIndexBlock = NUM_KEY_INDEX;
+    const char keyPerLinkedList = NUM_LINKED_LIST;
     unsigned int getSize() const;
     unsigned int getNumBlocks() const;
     void deleteBlock(unsigned int loc);
