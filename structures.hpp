@@ -8,6 +8,8 @@
 
 #define BLOCK_SIZE 200
 #define NUM_RECORDS (BLOCK_SIZE-1)/16
+#define NUM_KEY_INDEX (BLOCK_SIZE-4-4)/8
+#define NUM_LINKED_LIST (BLOCK_SIZE-1-4)/4
 
 #pragma pack(1)
 // Ugh so to explain, pragma pack forces the compiler to not add padding.
@@ -83,8 +85,8 @@ private:
 // 200B block
 class treeNodeBlock: public block{
 public:
-    std::array<unsigned int, 24> key = { }; // Minimum is 5, so we make 0 a special value.
-    Pointer ptrs[25];
+    std::array<unsigned int, NUM_KEY_INDEX> key = { }; // Minimum is 5, so we make 0 a special value.
+    Pointer ptrs[NUM_KEY_INDEX + 1];
     unsigned int getLength(){
         return key.size() - std::count(key.cbegin(), key.cend(), 0);
     }
@@ -103,8 +105,8 @@ private:
 };
 
 class linkedListNodeBlock: public block{
-    char padding[3];
-    Pointer pointers[48];
+    char padding[BLOCK_SIZE - 4 - 1 - NUM_LINKED_LIST * 4];
+    std::array<Pointer, NUM_LINKED_LIST> pointers;
     Pointer nextBlock;
 };
 
