@@ -60,10 +60,10 @@ struct RecordBlock: public block{
 //4 Bytes to save space. Oh no help me the bytewise manipulations
 class Pointer{
 public:
-    char entry; // Points to exact record, for dense index leaf nodes
+    char entry = -1; // Points to exact record, for dense index leaf nodes
     // We can use a negative value to indicate it does not point to data. Hence we know that it points to a tree
 
-    unsigned long getBlock(){
+    unsigned long getBlock() const {
         return (block[2] << 16) + (block[1] << 8) + block[0];
     }
 
@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    unsigned char block[3]; // Points to block. 0 should be a special value.
+    std::array<unsigned char, 3> block = { }; // Points to block. 0 should be a special value.
     // Block is accessed as MSB [2],[1],[0] LSB
     // This is private, we will use getters and setters here.
 };
@@ -82,10 +82,19 @@ private:
 // 200B block
 class treeNodeBlock: public block{
 public:
-    std::array<unsigned int, NUM_KEY_INDEX> key = { }; // Minimum is 5, so we make 0 a special value.
-    Pointer ptrs[NUM_KEY_INDEX + 1];
+    std::array<unsigned int, NUM_KEY_INDEX> key = { 0 }; // Minimum is 5, so we make 0 a special value.
+    std::array<Pointer, NUM_KEY_INDEX + 1> ptrs;
+
+    // Returns number of keys
     unsigned int getLength(){
-        return key.size() - std::count(key.cbegin(), key.cend(), 0);
+        unsigned int i=0, count=0;
+        while(i<key.size()){
+            if(key[i] == 0){
+                count++;
+            }
+            i++;
+        }
+        return key.size()-count;
     }
 
     unsigned long getParentBlock(){
@@ -102,6 +111,7 @@ private:
 };
 
 class linkedListNodeBlock: public block{
+public:
     char padding[BLOCK_SIZE - 4 - 1 - NUM_LINKED_LIST * 4];
     std::array<Pointer, NUM_LINKED_LIST> pointers;
     Pointer nextBlock;
