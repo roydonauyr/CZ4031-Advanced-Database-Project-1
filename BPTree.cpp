@@ -370,7 +370,7 @@ public:
 	}
 
 	// TODO: test this function
-	void deleteKey(keyStruct key, Node *currNode, Node *child)
+	void deleteKey(int key, unsigned int curr, unsigned int child)
 	{
 		// Set currNode and child to NULL on first run
 		// if key is not valid, return
@@ -432,82 +432,72 @@ public:
 		//			delete(key, parent)
 		//			return
 
+
+		
+
+
 		// Check if key is valid
-		if (key == NULL)
-		{
+		if (key == NULL) {
 			cout << "Key is null." << endl;
 			return;
 		}
 
-		if (currNode == root)
-		{
+		treeNodeBlock *currNode = static_cast<treeNodeBlock*>(blkManager->accessBlock(curr));
+
+		// If currNode is root
+		if (curr == rootNode) {
 			// Remove currNode entirely and set a child as root
-			if (currNode->size == 1)
-			{
-				// Figure out which key the child is and delete the child
-				if (currNode->ptr[0] == child)
-				{
-					root = currNode->ptr[0];
+			if (currNode->getLength() == 1) {
+				if (currNode->ptrs[0].getBlock() == child) {
+					rootNode = currNode->ptrs[0].getBlock();
 				}
-				else if (currNode->ptr[1] == child)
-				{
-					root = currNode->ptr[1];
+				else if (currNode->ptrs[1].getBlock() == child) {
+					rootNode = currNode->ptrs[1].getBlock();
 				}
 
-				cout << "Root is too empty, changing root..." delete[] child->ptr;
-				delete[] child->key;
-				delete child;
+				cout << "Root is too empty, changing root..." << endl;
+				blkManager->deleteBlock(child);
 			}
-			// currNode has no children
-			else if (currNode->size == 0)
-			{
+			else if (currNode->getLength() == 0) {
 				cout << "No keys left in the tree. Killing tree..." << endl;
-				root = NULL;
+				rootNode = NULL;
 			}
 
-			delete[] currNode->ptr;
-			delete[] currNode->key;
-			delete currNode;
+			blkManager->deleteBlock(curr);
 			return;
 		}
-		else
-		{
-			Node *parent;	  // Parent of currNode
-			int leftSibling;  // Index of left sibling
-			int rightSibling; // Index of right sibling
+		else {
+			int leftSibling;			// Index of left sibling
+			int rightSibling;			// Index of right sibling
 
-			Node *cursor = root;
+			treeNodeBlock *cursor = static_cast<treeNodeBlock*>(blkManager->accessBlock(rootNode));
+
 			// Loop through entire B+ tree until a leaf node is reached
-			while (!(cursor->IS_LEAF))
-			{
-				parent = cursor;
-				leftSibling = i - 1;
-				rightSibling = i + 1;
-
+			while (cursor->type != (unsigned char) "2") {
+				int index = 0;
 				// Find the node that might contain the key
-				for (i = 0; i < cursor.size; i++)
-				{
-					if (key.value < cursor->key[i].value || i == cursor.size - 1)
-					{
+				for (int i = 0; i < cursor->getLength(); i++) {
+					if (key < cursor->key[i] || i == cursor->getLength()) {
 						// Go to child node
-						cursor = cursor->ptr[i];
-						if (currNode == NULL)
-						{
-							currNode = cursor;
+						cursor = static_cast<treeNodeBlock*>(blkManager->accessBlock(cursor->ptrs[i].getBlock()));
+						if (currNode == NULL) {
+							currNode = dynamic_cast<treeNodeBlock*>(cursor);
 						}
 						break;
 					}
 				}
+				leftSibling = index - 1;
+				rightSibling = index + 1;
 			}
 
-			isDeleted = false;
+			treeNodeBlock* parent = static_cast<treeNodeBlock*>(blkManager->accessBlock(cursor->getParentBlock()));		// Parent of currNode
+
+			bool isDeleted = false;
 			int index = 0;
 
 			// Try to find key in currNode
-			for (i = 0; i < currNode->size; i++)
-			{
-				if (currNode->key[i].value == key.value)
-				{
+			for (int i = 0; i < currNode->getLength(); i++) {
+				if (currNode->key[i] == key) {
 					isDeleted = true;
 					index = i;
 					cout << "Key found, deleting key..." << endl;
@@ -515,136 +505,131 @@ public:
 			}
 
 			// Key not in B+ tree
-			if (!isDeleted)
-			{
+			if (!isDeleted) {
 				cout << "Key not found." << endl;
 				return;
 			}
 
-			// Delete key from node by moving subsequent keys and pointers 1 position forward
-			for (int i = index; i < currNode->size; i++)
-			{
+			// TODO: Delete linked list
+			if (blkManager->accessBlock(currNode->ptrs[index].getBlock())->type == '2') {
+				linkedListNodeBlock *toBeDeleted = static_cast<linkedListNodeBlock*>(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
+
+				while (toBeDeleted->nextBlock != nullptr) {
+					linkedListNodeBlock *currDelete = toBeDeleted;
+					toBeDeleted = static_cast<linkedListNodeBlock*>(blkManager->accessBlock(toBeDeleted->nextBlock.getBlock()));
+					blkManager->deleteBlock(currDelete->nextBlock.getBlock());
+				}
+			}
+			else if (blkManager->accessBlock(currNode->ptrs[index].getBlock())->type == '0') {
+				RecordBlock *toBeDeleted = static_cast<RecordBlock*>(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
+				blkManager->deleteBlock(currNode->ptrs[index].getBlock());
+			}
+
+			// Delete key
+			currNode->key[index] = 0;
+			currNode->ptrs[index].entry = (char) "0";
+
+			// Move subsequent keys and pointers 1 position forward
+			for (int i = index; i < currNode->getLength(); i++) {
 				currNode->key[i] = currNode->key[i + 1];
-				currNode->ptr[i] = currNode->ptr[i + 1]; // Not sure how this will go but should be correct
+				currNode->ptrs[i] = currNode->ptrs[i + 1]; // Not sure how this will go but should be correct
 			}
 
-			// Update last pointer in currNode and size of currNode
-			currNode->ptr[currNode->size - 1] = currNode->ptr[currNode->size];
-			currNode->size--;
-
-			// Case 1: check if no. of keys in currNode < floor((N + 1) / 2)
-			if (currNode->size >= floor((N + 1) / 2))
-			{
-				deleteKey(key, parent, currNode); // TODO: test if this is needed
-				return;
-			}
-
-			Node *leftNode;
-			Node *rightNode;
+			// Update last pointer in currNode
+			currNode->ptrs[currNode->getLength() - 1] = currNode->ptrs[currNode->getLength()];
 
 			// Case 2 and 3
+			treeNodeBlock *leftNode;
+			treeNodeBlock *rightNode;
+
 			// Check if left sibling exists
-			if (leftSibling >= 0)
-			{
-				leftNode = parent->ptr[leftSibling];
+			if (leftSibling >= 0) {
+				leftNode = static_cast<treeNodeBlock*>(blkManager->accessBlock(parent->ptrs[leftSibling].getBlock()));
 			}
 
 			// Check if right sibling exists
-			if (rightSibling <= N + 1)
-			{
-				rightNode = parent->ptr[rightSibling];
+			if (rightSibling <= N + 1) {
+				rightNode = static_cast<treeNodeBlock*>(blkManager->accessBlock(parent->ptrs[rightSibling].getBlock()));
 			}
 
 			// Left sibling can make a transfer
-			if (leftNode != NULL && leftNode->size >= ceil((N + 1) / 2))
-			{
+			if (leftNode != NULL && leftNode->getLength() >= ceil((NUM_KEY_INDEX + 1) / 2)) {
 				// Make space for the transfer
-				currNode->size++;
-				for (int i = currNode->size; i > 0; i--)
-				{
+				for (int i = currNode->getLength(); i > 0; i--) {
 					currNode->key[i - 1] = currNode->key[i - 2];
-					currNode->ptr[i] = currNode->ptr[i - 1];
+					currNode->ptrs[i] = currNode->ptrs[i - 1];
 				}
 
-				keyStruct unnecessaryKey = leftNode->key[leftNode->size - 1];
+				unsigned int unnecessaryKey = leftNode->key[leftNode->getLength() - 1];
 
 				// Transfer key from leftNode to currNode
-				currNode->key[0] = leftNode->key[leftNode->size - 1];
-				currNode->ptr[0] = leftNode->ptr[leftNode->size - 1];
+				currNode->key[0] = leftNode->key[leftNode->getLength() - 1];
+				currNode->ptrs[0] = leftNode->ptrs[leftNode->getLength() - 1];
 
 				// Update leftNode's last pointer and remove last key
-				leftNode->ptr[leftNode->size - 1] = leftNode->ptr[leftNode->size];
-				leftNode->size--;
+				leftNode->ptrs[leftNode->getLength() - 1] = leftNode->ptrs[leftNode->getLength()];
 
 				// Update parent
 				parent->key[leftSibling + 1] = cursor->key[0];
-				deleteKey(unnecessaryKey, parent, currNode);
+				deleteKey(unnecessaryKey, currNode->getParentBlock(), curr);
 				return;
-			}
+				}
 			// Right sibling can make a transfer
-			else if (rightNode != NULL && rightNode->size >= ceil((N + 1) / 2))
-			{
-				// Make space for the transfer
-				currNode->size++;
-
+			else if (rightNode != NULL && rightNode->getLength() >= ceil((N + 1) / 2)) {			
 				// Transfer key from rightNode to currNode
-				currNode->key[currNode->size - 1] = rightNode->key[0];
-				currNode->ptr[currNode->size - 1] = rightNode->ptr[0];
+				currNode->key[currNode->getLength() - 1] = rightNode->key[0];
+				currNode->ptrs[currNode->getLength() - 1] = rightNode->ptrs[0];
 
-				keyStruct unnecessaryKey = rightNode->key[0];
+				unsigned int unnecessaryKey = leftNode->key[rightNode->getLength() - 1];
 
 				// Remove rightNode's first key and update subsequent pointers and keys
-				for (int i = 0; i < rightNode->size; i++)
-				{
+				for (int i = 0; i < rightNode->getLength(); i++) {
 					rightNode->key[i] = rightNode->key[i + 1];
-					rightNode->ptr[i] = rightNode->ptr[i + 1];
+					rightNode->ptrs[i] = rightNode->ptrs[i + 1];
 				}
-				rightNode->ptr[rightNode->size] = rightNode->ptr[leftNode->size + 1];
-				rightNode->size--;
+				rightNode->ptrs[rightNode->getLength()] = rightNode->ptrs[leftNode->getLength() + 1];
 
 				// Update parent
 				parent->key[rightSibling] = rightNode->key[0];
-				deleteKey(unnecessaryKey, parent, currNode);
+				deleteKey(unnecessaryKey, currNode->getParentBlock(), curr);
 				return;
 			}
+
 			// Merge leftNode and currNode
 			else if (leftNode != NULL)
 			{
 				// Transfer all keys and pointers from currNode to leftNode
-				leftNode->size += currNode->size;
-				for (int i = leftNode->size, j = 0; j < currNode->size; i++, j++)
+				for (int i = leftNode->getLength(), j = 0; j < currNode->getLength(); i++, j++)
 				{
 					leftNode->key[i] = currNode->key[j];
-					leftNode->ptr[i + 1] = currNode->ptr[j];
+					leftNode->ptrs[i + 1] = currNode->ptrs[j];
 				}
-				leftNode->ptr[leftNode->size] = currNode->ptr[leftNode->size];
+				leftNode->ptrs[leftNode->getLength()] = currNode->ptrs[leftNode->getLength()];
 
 				// Delete currNode from parent
-				deleteParent(parent->key[leftSibling + 1], parent, currNode);
+				deleteKey(parent->key[leftSibling + 1], currNode->getParentBlock(), parent->ptrs[leftSibling].getBlock());
 			}
 			// Merge with rightNode
 			else
 			{
 				// Transfer all keys and pointers from rightNode to currNode
-				currNode->size += rightNode->size;
-				for (int i = currNode->size, j = 0; j < rightNode->size; i++, j++)
+				for (int i = currNode->getLength(), j = 0; j < rightNode->getLength(); i++, j++)
 				{
 					currNode->key[i] = rightNode->key[j];
-					currNode->ptr[i + 1] = rightNode->ptr[j];
+					currNode->ptrs[i + 1] = rightNode->ptrs[j];
 				}
-				currNode->ptr[currNode->size] = rightNode->ptr[rightNode->size];
+				currNode->ptrs[currNode->getLength()] = rightNode->ptrs[rightNode->getLength()];
 
 				// Delete rightNode from parent
-				deleteParent(parent->key[rightSibling], parent, rightNode);
+				deleteKey(parent->key[rightSibling], currNode->getParentBlock(), parent->ptrs[rightSibling].getBlock());
 			}
 
-			// Delete currNode
-			cout << "Deleting node..." << endl;
-			delete[] currNode->key;
-			delete[] currNode->ptr;
-			delete currNode;
-			return;
 		}
+		
+		// Delete currNode
+		cout << "Deleting node..." << endl;
+		blkManager->deleteBlock(curr);
+		return;
 	}
 
 	// If There is multiple entries then print only the first five
