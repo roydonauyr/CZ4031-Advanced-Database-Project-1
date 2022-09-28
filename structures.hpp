@@ -6,20 +6,23 @@
 #include <string>
 #include <cstring>
 
+#define BLOCK_SIZE 200
+#define NUM_RECORDS (BLOCK_SIZE-1)/16
+
 #pragma pack(1)
 // Ugh so to explain, pragma pack forces the compiler to not add padding.
 // GENERALLY A BAD IDEA
 
 // Fixed point x.x format, each using 1 byte which is more than enough
 struct fixedPoint{
-    unsigned char ones, decimal;
+    unsigned char ones = 0, decimal = 0;
 };
 
 // 16 bytes Record
 struct Record{
 public:
     fixedPoint avgRating;
-    unsigned int numVotes;
+    unsigned int numVotes = 0;
     std::string getTconst(){
         char buf[11];
         strncpy(buf, this->tconst, 10);
@@ -46,9 +49,9 @@ public:
 // TODO: Change array sizes based on dynamic calculation
 // 12 for 200B blocks because floor(200/16) = 12, with 8 bytes left over for other purposes.
 struct RecordBlock: public block{
-    Record records[12];
+    std::array<Record, NUM_RECORDS> records; //Can use records.size()
     
-    char padding[7]; //Currently there for padding purposes, we can use this for something else later
+    char padding[BLOCK_SIZE-(NUM_RECORDS*16+1)]; //Currently there for padding purposes, we can use this for something else later
 
     static RecordBlock* voidToRecord(void* blockPtr){
         return (RecordBlock*)(blockPtr); //UNSAFE
