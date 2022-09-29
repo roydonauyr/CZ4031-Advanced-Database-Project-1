@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <cmath>
 #include "structures.hpp"
-//#include "BPTree.cpp"
+#include "BPlusTree.hpp"
 #include "Database_Storage.hpp"
 
 using namespace std;
@@ -39,12 +39,15 @@ std::vector<Record> loadData(){
 int main() {
     std::vector<Record> Records = loadData();
 
+
     BlockManager blkManager;
+    BPlusTree tree = BPlusTree(&blkManager);
     const unsigned int numBlocksStore = (unsigned int) ceil((float)Records.size() / (float)blkManager.recordsPerBlock);
-    const unsigned int firstBlock = blkManager.createRecordBlocks(numBlocksStore);
+    const unsigned int firstBlock = blkManager.createRecordBlocks(numBlocksStore); // First block - firstBlock + numBlocksStore - 1
     unsigned int i = 0, curBlockIndex = firstBlock;
     RecordBlock *curBlock = (RecordBlock *) blkManager.accessBlock(curBlockIndex);
     while(i<Records.size()){
+        //std::cout<<"INSERTING "<<Records[i].getTconst()<<" "<<Records[i].numVotes<<std::endl;
         curBlock->records[i%blkManager.recordsPerBlock] = Records[i];
         if((i%blkManager.recordsPerBlock) == (blkManager.recordsPerBlock-1)){
             curBlockIndex++;
@@ -52,7 +55,26 @@ int main() {
         }
         i++;
     }
-
+    RecordBlock *test = (RecordBlock *)blkManager.accessBlock(firstBlock);
+    Pointer ptr;
+    ptr.setBlock(firstBlock);
+    ptr.entry=0;
+    i=0;
+    curBlockIndex = firstBlock;
+    curBlock= (RecordBlock *) blkManager.accessBlock(curBlockIndex);
+    tree.insert(test->records[0].numVotes, ptr);
+    while(i<Records.size()){
+        std::cout<<std::endl<<"INSERTING: "<<curBlock->records[i%blkManager.recordsPerBlock].numVotes<<std::endl;
+        ptr.setBlock(curBlockIndex);
+        ptr.entry=i%blkManager.recordsPerBlock;
+        tree.insert(curBlock->records[i%blkManager.recordsPerBlock].numVotes, ptr);
+        if((i%blkManager.recordsPerBlock) == (blkManager.recordsPerBlock-1)){
+            curBlockIndex++;
+            curBlock = (RecordBlock *) blkManager.accessBlock(curBlockIndex);
+        }
+        i++;
+    }
     std::cout<<"Number of blocks used by storage is: "<<numBlocksStore<<std::endl;
     std::cout<<"Size used by storage is: "<<numBlocksStore * blkManager.blkSize<<"B"<<std::endl;
+    std::cout<<"Number of blocks used total is: "<<blkManager.getNumBlocks()<<std::endl;
 }

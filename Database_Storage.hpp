@@ -26,6 +26,7 @@ public:
     //unsigned int createBlock();
     unsigned int createRecordBlock();
     unsigned int createIndexBlock();
+    unsigned int createLinkedListBlock();
     unsigned int createRecordBlocks(unsigned int numBlocks);
     unsigned int createIndexBlocks(unsigned int numBlocks);
     block * accessBlock(unsigned int index) const;
@@ -63,6 +64,20 @@ unsigned int BlockManager::createRecordBlock(){
 
 unsigned int BlockManager::createIndexBlock(){
     block * ptr = new treeNodeBlock;
+    if(deletedIndex.empty()){
+        blockPtrArray.push_back(ptr);
+        return blockPtrArray.size() - 1 + 1;
+    }
+    else{
+        unsigned int temp = deletedIndex.front();
+        deletedIndex.pop();
+        blockPtrArray[temp] = ptr;
+        return temp;
+    }
+}
+
+unsigned int BlockManager::createLinkedListBlock(){
+    block * ptr = new linkedListNodeBlock;
     if(deletedIndex.empty()){
         blockPtrArray.push_back(ptr);
         return blockPtrArray.size() - 1 + 1;
