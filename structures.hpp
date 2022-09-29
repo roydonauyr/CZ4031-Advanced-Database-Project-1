@@ -28,7 +28,7 @@ public:
     std::string getTconst(){
         char buf[11];
         strncpy(buf, this->tconst, 10);
-        buf[11] = '\0';
+        buf[10] = '\0';
         return std::string(buf);
     }
 

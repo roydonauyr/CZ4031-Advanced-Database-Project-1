@@ -1,3 +1,6 @@
+#ifndef BPLUSTREE_HEADER
+#define BPLUSTREE_HEADER
+
 #include <algorithm>
 #include <array>
 #include <iterator>
@@ -47,7 +50,8 @@ public:
 		}
 		while(curBlock -> type != 2){
 			unsigned int i = 0;
-			while(i<curBlock->getLength() && key<curBlock->key[i]){
+			// C 1 A 4 B
+			while(i<curBlock->getLength() && key>curBlock->key[i]){
 				i++;
 			}
 			curIndex = curBlock->ptrs[i].getBlock();
@@ -92,9 +96,9 @@ public:
 	}
 
 	void insertInternal(unsigned int curBlockIndex , const Pointer ptr){
-		printf("---------INSERT INTERNAL----------\n");
+		//printf("---------INSERT INTERNAL----------\n");
 		treeNodeBlock* curBlock = (treeNodeBlock*)blkManager->accessBlock(curBlockIndex);
-		unsigned int key = lowestBound((treeNodeBlock*)blkManager->accessBlock(ptr.getBlock()));
+		//unsigned int key = lowestBound((treeNodeBlock*)blkManager->accessBlock(ptr.getBlock()));
 		if(curBlock->getLength() < curBlock->key.size()){
 			// Has space, just insert
 			/*unsigned int locationToInsert = 0;
@@ -146,7 +150,7 @@ public:
 
 			treeNodeBlock* childBlock = (treeNodeBlock*)blkManager->accessBlock(ptr.getBlock());
 			childBlock->setParentBlock(curBlockIndex);
-			printTreeNode(curBlockIndex);
+			//printTreeNode(curBlockIndex);
 		}
 		else{
 			// No space, need to split
@@ -227,14 +231,14 @@ public:
 				toAddPtr.setBlock(newTreeNodeIndex);
 				insertInternal(curBlock->getParentBlock(), toAddPtr);
 			}
-			printTreeNode(curBlockIndex);
-			printTreeNode(newTreeNodeIndex);
+			//printTreeNode(curBlockIndex);
+			//printTreeNode(newTreeNodeIndex);
 
 		}
 	}
 
 	void insert(unsigned int key, Pointer ptr){
-		printf("----------INSERT-----------\n");
+		//printf("----------INSERT-----------\n");
 		if(rootNode == 0){
 			//Empty tree, create new tree
 			rootNode = blkManager->createIndexBlock();
@@ -242,11 +246,11 @@ public:
 			rootBlock->type = 2;
 			rootBlock->key[0] = key;
 			rootBlock->ptrs[0] = ptr;
-			printTreeNode(rootNode);
+			//printTreeNode(rootNode);
 		}
 		else{
 			const unsigned int blockToInsert = searchBlockToContain(key);
-			printf("BLOCK TO INSERT: %d\n", blockToInsert);
+			//printf("BLOCK TO INSERT: %d\n", blockToInsert);
 			treeNodeBlock* insertBlock = (treeNodeBlock*)blkManager->accessBlock(blockToInsert);
 			//if(insertBlock->getLength() < insertBlock->key.size()){
 			if(insertBlock->getLength() < insertBlock->key.size()){
@@ -294,8 +298,6 @@ public:
 					
 					//std::copy(insertBlock->key.begin() + locationToInsert, insertBlock->key.end(), std::back_inserter(keyTemp));
 					//std::move_backward(insertBlock->key.begin() + locationToInsert, insertBlock->key.end() - 1, insertBlock->key.end());
-
-					std::cout<<"FK ME: "<<ptr.getBlock()<<std::endl;
 					i=0;
 					while(i<keyTemp.size()){
 						//std::cout<<"Temp Key: "<<keyTemp[i]<<" ptr: "<<ptrTemp[i].getBlock();
@@ -306,12 +308,12 @@ public:
 					}
 					insertBlock->ptrs[locationToInsert] = ptr;
 					insertBlock->key[locationToInsert] = key;
-					std::cout<<std::endl;
+					//std::cout<<std::endl;
 					//std::copy(ptrTemp.begin(), ptrTemp.end(), insertBlock->ptrs.begin() + locationToInsert);
 					//std::copy(keyTemp.begin(), keyTemp.end(), insertBlock->key.begin() + locationToInsert);
 
 					//insertBlock->ptrs[insertBlock->ptrs.size() -1 ] = IAmNotArsedToDoAWhileLoop;
-					printTreeNode(blockToInsert);
+					//printTreeNode(blockToInsert);
 					
 				}
 			}
@@ -337,7 +339,7 @@ public:
 						newLinkedList->pointers[0] = pointed;
 						newLinkedList->pointers[1] = ptr;
 					}
-					printTreeNode(blockToInsert);
+					//printTreeNode(blockToInsert);
 				}
 				else{
 					// No duplicates exists, need to split
@@ -409,10 +411,12 @@ public:
 						toAddPtr.setBlock(newTreeBlockIndex);
 						insertInternal(insertBlock->getParentBlock(), toAddPtr);
 					}
-					printTreeNode(blockToInsert);
-					printTreeNode(newTreeBlockIndex);
+					//printTreeNode(blockToInsert);
+					//printTreeNode(newTreeBlockIndex);
 				}
 			}
 		}
 	}
 };
+
+#endif

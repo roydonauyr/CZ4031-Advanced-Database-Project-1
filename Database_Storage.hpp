@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstdlib>
 #include <queue>
-#include <set>
+#include <unordered_set>
 
 #include "structures.hpp"
 
@@ -33,8 +33,9 @@ public:
     unsigned int createRecordBlocks(unsigned int numBlocks);
     //unsigned int createIndexBlocks(unsigned int numBlocks);
     block * accessBlock(unsigned int index);
+    block * noLogAccessBlock(unsigned int index) const;
     void clearAccessed();
-    std::set<unsigned int> accessedDataBlocks, accessedTreeBlocks;
+    std::unordered_set<unsigned int> accessedDataBlocks, accessedTreeBlocks;
 
     std::vector<unsigned int> firstData, firstTree;
 };
@@ -144,21 +145,25 @@ unsigned int BlockManager::createBlocks(unsigned int numBlocks){
 
 block * BlockManager::accessBlock(unsigned int index) {
     if(blockPtrArray[index-1]->type == 0){
-        accessedDataBlocks.insert(index);
+        accessedDataBlocks.insert(index-1);
         if(firstData.size() < 5){
-            if(std::find(firstData.begin(), firstData.end(), index) != firstData.end()){
-                firstData.push_back(index);
+            if(std::find(firstData.begin(), firstData.end(), index-1) == firstData.end()){
+                firstData.push_back(index-1);
             }
         }
     }
     else{
-        accessedTreeBlocks.insert(index);
+        accessedTreeBlocks.insert(index-1);
         if(firstTree.size() < 5){
-            if(std::find(firstTree.begin(), firstTree.end(), index) != firstTree.end()){
-                firstTree.push_back(index);
+            if(std::find(firstTree.begin(), firstTree.end(), index-1) == firstTree.end()){
+                firstTree.push_back(index-1);
             }
         }
     }
+    return blockPtrArray[index-1];
+}
+
+block * BlockManager::noLogAccessBlock(unsigned int index) const {
     return blockPtrArray[index-1];
 }
 
