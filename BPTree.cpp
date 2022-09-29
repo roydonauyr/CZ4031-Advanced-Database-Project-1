@@ -634,6 +634,7 @@ public:
 	}
 
 	// If There is multiple entries then print only the first five
+	// assuming the tree is not empty
 	std::vector<Record> searchKeys(int key)
 	{	
 		treeNodeBlock *root = (treeNodeBlock *)blkManager->accessBlock(rootNode); 
@@ -643,12 +644,7 @@ public:
 
 		block_ids.push_back(rootNode);
 		id_counter++;
-
-		if(root == nullptr) {
-			std::cout << "Tree is empty\n" << std::endl;
-			return;
-		} 
-		
+	
 		bool search_failed = false; // if no such key exists
 
 		block *cursor = root; // initialise cursor at root
