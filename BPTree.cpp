@@ -511,11 +511,11 @@ public:
 				return;
 			}
 
-			// TODO: Delete linked list
+			// Delete linked list
 			if (blkManager->accessBlock(currNode->ptrs[index].getBlock())->type == '2') {
 				linkedListNodeBlock *toBeDeleted = static_cast<linkedListNodeBlock*>(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
 
-				while (toBeDeleted->nextBlock != nullptr) {
+				while (toBeDeleted->nextBlock.entry != -1) {
 					linkedListNodeBlock *currDelete = toBeDeleted;
 					toBeDeleted = static_cast<linkedListNodeBlock*>(blkManager->accessBlock(toBeDeleted->nextBlock.getBlock()));
 					blkManager->deleteBlock(currDelete->nextBlock.getBlock());
