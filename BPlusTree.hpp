@@ -18,6 +18,22 @@ public:
 		this->blkManager = mgr;
 	}
 
+	// Print out a node block for BPlusTree
+	void printNode(unsigned int nodeIndex){
+		treeNodeBlock* curNode = (treeNodeBlock*) blkManager->accessBlock(nodeIndex);
+		std::cout<<"Block id is: "<<nodeIndex<<std::endl;
+		std::cout<<"Parent id is: "<<curNode->getParentBlock()<<std::endl;
+		std::cout<<"Type is: "<<curNode->type<<std::endl;
+		std::cout<<"Keys: "<<std::endl;
+		for (unsigned int key: curNode->key){
+			std::cout<<key<<std::endl;
+		}
+		std::cout<<"Ptrs: "<<std::endl;
+		for (Pointer ptr: curNode->ptrs){
+			std::cout<<ptr.getBlock()<<std::endl;
+		}
+	}
+
 	// Assuming that we have a root node, finds the block which should contain a particular key.
 	// Block need not have space to contain this key
 	unsigned int searchBlockToContain(unsigned int key){
