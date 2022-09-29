@@ -68,8 +68,8 @@ public:
     }
 
     void setBlock(unsigned long blockNum){
-        block[2] = blockNum & 0xFF0000;
-        block[1] = blockNum & 0xFF00;
+        block[2] = (blockNum & 0xFF0000) >> 16;
+        block[1] = (blockNum & 0xFF00) >> 8;
         block[0] = blockNum & 0xFF;
     }
 
@@ -102,8 +102,8 @@ public:
     }
 
     void setParentBlock(unsigned long blockNum){
-        parentBlock[2] = blockNum & 0xFF0000;
-        parentBlock[1] = blockNum & 0xFF00;
+        parentBlock[2] = (blockNum & 0xFF0000) >> 16;
+        parentBlock[1] = (blockNum & 0xFF00) >> 8;
         parentBlock[0] = blockNum & 0xFF;
     }
 private:

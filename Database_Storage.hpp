@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdlib>
 #include <queue>
+#include <set>
 
 #include "structures.hpp"
 
@@ -19,6 +20,8 @@ public:
     const char recordsPerBlock = NUM_RECORDS;
     const char keyPerIndexBlock = NUM_KEY_INDEX;
     const char keyPerLinkedList = NUM_LINKED_LIST;
+    unsigned long numStorageBlocks = 0;
+    unsigned long numTreeBlocks = 0;
     unsigned int getSize() const;
     unsigned int getNumBlocks() const;
     void deleteBlock(unsigned int loc);
@@ -28,8 +31,12 @@ public:
     unsigned int createIndexBlock();
     unsigned int createLinkedListBlock();
     unsigned int createRecordBlocks(unsigned int numBlocks);
-    unsigned int createIndexBlocks(unsigned int numBlocks);
-    block * accessBlock(unsigned int index) const;
+    //unsigned int createIndexBlocks(unsigned int numBlocks);
+    block * accessBlock(unsigned int index);
+    void clearAccessed();
+    std::set<unsigned int> accessedDataBlocks, accessedTreeBlocks;
+
+    std::vector<unsigned int> firstData, firstTree;
 };
 
 unsigned int BlockManager::getSize() const {
@@ -48,6 +55,7 @@ void BlockManager::deleteBlock(unsigned int loc){
 }
 
 unsigned int BlockManager::createRecordBlock(){
+    numStorageBlocks++;
     block * ptr = new RecordBlock;
     ptr->type = 0;
     if(deletedIndex.empty()){
@@ -63,6 +71,7 @@ unsigned int BlockManager::createRecordBlock(){
 }
 
 unsigned int BlockManager::createIndexBlock(){
+    numTreeBlocks++;
     block * ptr = new treeNodeBlock;
     if(deletedIndex.empty()){
         blockPtrArray.push_back(ptr);
@@ -77,6 +86,7 @@ unsigned int BlockManager::createIndexBlock(){
 }
 
 unsigned int BlockManager::createLinkedListBlock(){
+    numTreeBlocks++;
     block * ptr = new linkedListNodeBlock;
     if(deletedIndex.empty()){
         blockPtrArray.push_back(ptr);
@@ -91,6 +101,7 @@ unsigned int BlockManager::createLinkedListBlock(){
 }
 
 unsigned int BlockManager::createRecordBlocks(unsigned int numBlocks){
+    numStorageBlocks+=numBlocks;
     unsigned int firstIndex = blockPtrArray.size();
     for (int i = 0; i < numBlocks; i++){
         block * ptr = new RecordBlock;
@@ -100,14 +111,14 @@ unsigned int BlockManager::createRecordBlocks(unsigned int numBlocks){
     return firstIndex + 1;
 }
 
-unsigned int BlockManager::createIndexBlocks(unsigned int numBlocks){
+/*unsigned int BlockManager::createIndexBlocks(unsigned int numBlocks){
     unsigned int firstIndex = blockPtrArray.size();
     for (int i = 0; i < numBlocks; i++){
         block * ptr = new treeNodeBlock;
         blockPtrArray.push_back(ptr);
     }
     return firstIndex + 1;
-}
+}*/
 
 /*unsigned int BlockManager::createBlock(){
     void* ptr = (void*) malloc(blkSize);
@@ -131,8 +142,31 @@ unsigned int BlockManager::createBlocks(unsigned int numBlocks){
     return firstIndex;
 }*/
 
-block * BlockManager::accessBlock(unsigned int index) const{
+block * BlockManager::accessBlock(unsigned int index) {
+    if(blockPtrArray[index-1]->type == 0){
+        accessedDataBlocks.insert(index);
+        if(firstData.size() < 5){
+            if(std::find(firstData.begin(), firstData.end(), index) != firstData.end()){
+                firstData.push_back(index);
+            }
+        }
+    }
+    else{
+        accessedTreeBlocks.insert(index);
+        if(firstTree.size() < 5){
+            if(std::find(firstTree.begin(), firstTree.end(), index) != firstTree.end()){
+                firstTree.push_back(index);
+            }
+        }
+    }
     return blockPtrArray[index-1];
+}
+
+void BlockManager::clearAccessed(){
+    accessedDataBlocks.clear();
+    accessedTreeBlocks.clear();
+    firstTree.clear();
+    firstData.clear();
 }
 
 #endif
