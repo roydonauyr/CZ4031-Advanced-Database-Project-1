@@ -64,9 +64,10 @@ int main() {
     curBlock= (RecordBlock *) blkManager.accessBlock(curBlockIndex);
     tree.insert(test->records[0].numVotes, ptr);
     while(i<Records.size()){
-        std::cout<<std::endl<<"INSERTING: "<<curBlock->records[i%blkManager.recordsPerBlock].numVotes<<std::endl;
+
         ptr.setBlock(curBlockIndex);
         ptr.entry=i%blkManager.recordsPerBlock;
+        std::cout<<std::endl<<"INSERTING: "<<curBlock->records[i%blkManager.recordsPerBlock].numVotes<<" PTR: "<<ptr.getBlock()<<std::endl;
         tree.insert(curBlock->records[i%blkManager.recordsPerBlock].numVotes, ptr);
         if((i%blkManager.recordsPerBlock) == (blkManager.recordsPerBlock-1)){
             curBlockIndex++;
@@ -77,4 +78,5 @@ int main() {
     std::cout<<"Number of blocks used by storage is: "<<numBlocksStore<<std::endl;
     std::cout<<"Size used by storage is: "<<numBlocksStore * blkManager.blkSize<<"B"<<std::endl;
     std::cout<<"Number of blocks used total is: "<<blkManager.getNumBlocks()<<std::endl;
+    std::cout<<"DONE"<<std::endl;
 }
