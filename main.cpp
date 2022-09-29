@@ -47,6 +47,7 @@ int main() {
     unsigned int i = 0, curBlockIndex = firstBlock;
     RecordBlock *curBlock = (RecordBlock *) blkManager.accessBlock(curBlockIndex);
     while(i<Records.size()){
+        //std::cout<<"INSERTING "<<Records[i].getTconst()<<" "<<Records[i].numVotes<<std::endl;
         curBlock->records[i%blkManager.recordsPerBlock] = Records[i];
         if((i%blkManager.recordsPerBlock) == (blkManager.recordsPerBlock-1)){
             curBlockIndex++;
@@ -60,12 +61,13 @@ int main() {
     ptr.entry=0;
     i=0;
     curBlockIndex = firstBlock;
+    curBlock= (RecordBlock *) blkManager.accessBlock(curBlockIndex);
     tree.insert(test->records[0].numVotes, ptr);
     while(i<Records.size()){
+        std::cout<<std::endl<<"INSERTING: "<<curBlock->records[i%blkManager.recordsPerBlock].numVotes<<std::endl;
         ptr.setBlock(curBlockIndex);
         ptr.entry=i%blkManager.recordsPerBlock;
         tree.insert(curBlock->records[i%blkManager.recordsPerBlock].numVotes, ptr);
-        //std::cout<<"Number of record is: "<<i<<std::endl;
         if((i%blkManager.recordsPerBlock) == (blkManager.recordsPerBlock-1)){
             curBlockIndex++;
             curBlock = (RecordBlock *) blkManager.accessBlock(curBlockIndex);

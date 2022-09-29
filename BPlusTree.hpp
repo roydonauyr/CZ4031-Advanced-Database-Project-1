@@ -187,6 +187,7 @@ public:
 		}
 		else{
 			const unsigned int blockToInsert = searchBlockToContain(key);
+			printf("BLOCK TO INSERT: %d\n", blockToInsert);
 			treeNodeBlock* insertBlock = (treeNodeBlock*)blkManager->accessBlock(blockToInsert);
 			//if(insertBlock->getLength() < insertBlock->key.size()){
 			if(insertBlock->getLength() < insertBlock->key.size()){
@@ -216,18 +217,37 @@ public:
 					// No duplicate, shift all other keys and pointers back
 					// Move Nth - getLength()th key and ptr back by 1
 					// Insert to Nth index
-					Pointer IAmNotArsedToDoAWhileLoop = insertBlock->ptrs[insertBlock->ptrs.size() -1 ];
+					const Pointer IAmNotArsedToDoAWhileLoop = insertBlock->ptrs[insertBlock->ptrs.size() -1 ];
+					unsigned int i = 0;
+					std::cout<<std::endl<<"array initial"<<std::endl;
+					while(i<insertBlock->key.size()){
+						std::cout<<insertBlock->key[i]<<" ";
+						i++;
+					}
+					std::vector<unsigned int> keyTemp;
+					std::vector<Pointer> ptrTemp;
+					//std::move_backward(insertBlock->ptrs.begin() + locationToInsert, insertBlock->ptrs.end() - 1, insertBlock->ptrs.end());
+					std::copy(insertBlock->ptrs.begin() + locationToInsert, insertBlock->ptrs.end(), std::back_inserter(ptrTemp));
+					
+					std::copy(insertBlock->key.begin() + locationToInsert, insertBlock->key.end(), std::back_inserter(keyTemp));
+					//std::move_backward(insertBlock->key.begin() + locationToInsert, insertBlock->key.end() - 1, insertBlock->key.end());
+					/*insertBlock->ptrs[locationToInsert] = ptr;
+					insertBlock->key[locationToInsert] = key;*/
+					ptrTemp.insert(ptrTemp.begin(), ptr );
+					keyTemp.insert(keyTemp.begin(), key );
+					std::move(ptrTemp.begin(), ptrTemp.end(), insertBlock->ptrs.begin() + locationToInsert);
+					std::move(keyTemp.begin(), keyTemp.end(), insertBlock->key.begin() + locationToInsert);
 
-					std::move_backward(insertBlock->ptrs.begin() + locationToInsert, insertBlock->ptrs.end() - 1, insertBlock->ptrs.end());
 					insertBlock->ptrs[insertBlock->ptrs.size() -1 ] = IAmNotArsedToDoAWhileLoop;
-
-					std::move_backward(insertBlock->key.begin() + locationToInsert, insertBlock->key.end() - 1, insertBlock->key.end());
-					insertBlock->ptrs[locationToInsert] = ptr;
-					insertBlock->key[locationToInsert] = key;
+					i= 0;
+					std::cout<<std::endl<<"array end"<<std::endl;
+					while(i<insertBlock->key.size()){
+						std::cout<<insertBlock->key[i]<<" ";
+						i++;
+					}
 				}
 			}
 			else{
-				std::cout<<"TEST"<<std::endl;
 				// No space, need to check if duplicate exists
 				unsigned int locationToInsert = 0;
 				while(insertBlock->key[locationToInsert] < key && locationToInsert < insertBlock->getLength()){
