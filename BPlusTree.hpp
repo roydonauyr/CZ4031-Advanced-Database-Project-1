@@ -20,6 +20,425 @@ public:
 	BPlusTree(BlockManager *mgr){
 		this->blkManager = mgr;
 	}
+	std::vector<Record> searchKeys(unsigned int key)
+	{	
+		treeNodeBlock *root = (treeNodeBlock *)blkManager->accessBlock(rootNode); 
+		std::vector<Record> results;
+		std::vector<int> block_ids;
+		int id_counter = 0;
+
+		block_ids.push_back(rootNode);
+		id_counter++;
+	
+		bool search_failed = false; // if no such key exists
+
+		block *cursor = root; // initialise cursor at root
+
+		while (cursor != nullptr || !search_failed) { // while loop till manually break or finish searching
+			switch (cursor->type) {
+				// for record blocks
+				case 0:
+				{
+					RecordBlock * record_block = (RecordBlock *) cursor; // casting
+
+					for (int i = 0; i < record_block->records.size(); i++) { // check all records for matching key
+						if (record_block->records[i].numVotes == key) {
+							results.push_back(record_block->records[i]); // push matching records into results set
+						} 
+					}
+
+					break;
+				}
+				
+				//for interal nodes
+				case 1:
+				{
+					treeNodeBlock* internal_node = (treeNodeBlock *) cursor; // casting
+
+					for(int i = 0; i < internal_node->getLength(); i++) { // check all keys in index_node
+						
+						if(internal_node->key[i] == key) { // if internal node key is equal to key, access block pointed by i+1 pointer
+							
+							cursor = blkManager->accessBlock(internal_node->ptrs[i+1].getBlock()); // reset cursor to target block in next layer
+							
+							if (id_counter++ < 5) {// print if total index prints less than 5
+								// do printing if printing works
+								block_ids.push_back(internal_node->ptrs[i+1].getBlock());
+							}
+
+							break;
+						}
+						else if(internal_node->key[i] > key) { // if internal node key is > key, access block pointed by i pointer
+							
+							cursor = blkManager->accessBlock(internal_node->ptrs[i].getBlock()); // reset cursor to target block in next layer
+							
+							if (id_counter++ < 5) {// print if total index prints less than 5
+								// do printing if printing works
+								block_ids.push_back(internal_node->ptrs[i+1].getBlock());
+							}
+
+							break;
+						}
+					}
+					break;
+				}
+					
+
+				// for leaf nodes
+				// at the leaf node, can know if the search has failed or not
+				case 2:
+				{
+					treeNodeBlock * leaf_node = (treeNodeBlock *) cursor; 
+					search_failed = true;
+
+					for(int i = 0; i < leaf_node->getLength(); i++) { // check all leaf keys for matching
+						
+						if (leaf_node->key[i] == key) { // if dense == key, if sparse >= key
+							cursor = blkManager->accessBlock(leaf_node->ptrs[i].getBlock()); // change cursor to the recordblock containing the matching record
+							search_failed = false;	// record has been found, split to duplicates vs nonduplicates
+							
+							if (id_counter++ < 5) {// print if total index prints less than 5
+								// do printing if printing works
+								block_ids.push_back(leaf_node->ptrs[i+1].getBlock());
+							
+							}
+
+							break; // stop searching as key is already found
+						}
+					}
+					break;
+				}
+
+				// for linkedlist block
+				case 3:
+				{
+					linkedListNodeBlock *linked_list_node_block = (linkedListNodeBlock *)cursor; 
+					RecordBlock* record_block_cursor; // cursor for parsing recordblocks
+					// NOTE please help to check protection on linkedlistnodeblock variables
+
+					for (int i = 0; i < linked_list_node_block->pointers.size(); i++) { // change function to pointer.size() when available, currently is boilerplate
+						record_block_cursor = (RecordBlock *)blkManager->accessBlock(linked_list_node_block->pointers[i].getBlock()); // update record block cursor
+						for (int i = 0; i < record_block_cursor->records.size(); i++) {// check all records in current recordblock
+						// check all records for matching key
+						
+							if (record_block_cursor->records[i].numVotes == key) { // check if key matches could be removed leaving it in for sanity reasons
+								results.push_back(record_block_cursor->records[i]); // push matching records into results set
+							}
+						}
+					} 
+					if (linked_list_node_block->nextBlock.entry > -1) { // go to next linked block in linked list
+						cursor = blkManager->accessBlock(linked_list_node_block->nextBlock.getBlock()); // update cursor
+					}
+					break;
+				}
+			}
+			
+		} return results; // return results set count be empty if not found ez
+		
+		// if (root == NULL)
+		// {
+		// 	cout << "Tree is empty\n";
+		// }
+		// else
+		// {
+		// 	Node *cursor = root;
+		// 	// While loop until you find a leaf node
+		// 	while (cursor->IS_LEAF == false)
+		// 	{
+		// 		// Apply binary search and once find the
+		// 		for (int i = 0; i < cursor->size; i++)
+		// 		{
+		// 			if (key < cursor->item[i])
+		// 			{
+		// 				// find child node
+		// 				cursor = cursor->children[i];
+		// 				break;
+		// 			}
+		// 			if (i == (cursor->size) - 1)
+		// 			{
+		// 				cursor = cursor->children[i + 1];
+		// 				break;
+		// 			}
+		// 		}
+		// 	}
+		// 	for (int i = 0; i < cursor->size; i++)
+		// 	{
+		// 		if (cursor->item[i] == key)
+		// 		{
+		// 			// Print out key details as well
+		// 			// Check next children whether its the same key
+		// 			// If key is the same need to print also
+		// 			// Total five times if more than five
+		// 			// Another While loop
+		// 			return;
+		// 		}
+		// 	}
+		// 	cout << "Not found\n";
+		// 	// send not found not sure if need to return nullptr
+		// }
+	}
+
+	void deleteKey(unsigned int key, unsigned int curr, unsigned int child)
+	{
+		// Set currNode and child to NULL on first run
+		// if key is not valid, return
+		//
+		// if currNode is root
+		//	if there is only 1 key in the root
+		//		set 1 of the children (key != key to be deleted) as root
+		//		delete old root (i.e. currNode)
+		//	if root is empty
+		//		delete root
+		// else if currNode is null
+		//	for each non-leaf node in B+ tree
+		//		record parent, leftSibling and rightSibling of currNode
+		//		for each key[i] in node
+		//			if key < key[i] (i.e. key potentially found)
+		//				go to child node via ith pointer
+		//				break
+		//	instantiate deleted = false and index = 0 (to check if key is found and the key's index within the node)
+		//	for each key in currNode (currNode is a leaf node)
+		//		if key == key in leaf node
+		//			deleted = false
+		//			index = key's current index
+		//	if deleted = false (i.e. key not found)
+		//		return
+		//	for each key in currNode after index
+		//		move pointer and key 1 index forward
+		// else
+		//	if currNode is leaf && remaining keys >= floor((n + 1) / 2) || currNode is not leaf && remaining keys >= floor(n / 2) (i.e. case 1)
+		// 		delete(key, parent) (delete key from parent if necessary)
+		//		return
+		//	else
+		//		instantiate leftNode, rightNode and redundantKey
+		//		if leftSibling exists
+		//			leftNode = node at leftSibling
+		//		if rightSibling exists
+		//			rightNode = node at rightSibling
+		//		if (leftNode is leaf && keys >= floor((n + 1) / 2)) || (leftNode is not leaf && keys >= floor(n / 2)) (case 2)
+		//			create space for transfer (if needed)
+		//			transfer a key from leftNode to currNode
+		//			redundantKey = transferred key
+		//			delete redundantKey in leftNode
+		//			delete(redundantKey, parent)
+		//			return
+		//		else if (leftNode is leaf && keys >= floor((n + 1) / 2)) || (leftNode is not leaf && keys >= floor(n / 2)) (case 2)
+		//			create space for transfer (if needed)
+		//			transfer a key from rightNode to currNode
+		//			redundantKey = transferred key
+		//			delete redundantKey in rightNode
+		//			delete(redundantKey, parent)
+		//			return
+		//		else (case 3)
+		//			if leftNode != null (i.e. leftNode exists)
+		//				merge leftNode and currNode
+		//				delete currNode from parent
+		//			else if rightNode != null (i.e. rightNode exists)
+		//				merge currNode and rightNode
+		//				delete currNode from parent
+		//			delete currNode
+		//			delete(key, parent)
+		//			return
+
+
+		
+
+
+		// Check if key is valid
+		if (key == 0) {
+			std::cout << "Key is null." << std::endl;
+			return;
+		}
+
+		treeNodeBlock *currNode = (treeNodeBlock*)(blkManager->accessBlock(curr));
+
+		// If currNode is root
+		if (curr == rootNode) {
+			// Remove currNode entirely and set a child as root
+			if (currNode->getLength() == 1) {
+				if (currNode->ptrs[0].getBlock() == child) {
+					rootNode = currNode->ptrs[0].getBlock();
+				}
+				else if (currNode->ptrs[1].getBlock() == child) {
+					rootNode = currNode->ptrs[1].getBlock();
+				}
+
+				std::cout << "Root is too empty, changing root..." << std::endl;
+				blkManager->deleteBlock(child);
+			}
+			else if (currNode->getLength() == 0) {
+				std::cout << "No keys left in the tree. Killing tree..." << std::endl;
+				rootNode = 0;
+			}
+
+			blkManager->deleteBlock(curr);
+			return;
+		}
+		else {
+			int leftSibling;			// Index of left sibling
+			int rightSibling;			// Index of right sibling
+
+			treeNodeBlock *cursor = (treeNodeBlock*)(blkManager->accessBlock(rootNode));
+			// Loop through entire B+ tree until a leaf node is reached
+			while (cursor->type != 2) {
+				int index = 0;
+				// Find the node that might contain the key
+				for (int i = 0; i < cursor->getLength(); i++) {
+					if (key < cursor->key[i] || i == cursor->getLength()) {
+						// Go to child node
+						cursor = (treeNodeBlock*)(blkManager->accessBlock(cursor->ptrs[i].getBlock()));
+						if (currNode == NULL) {
+							currNode = (treeNodeBlock*)(cursor);
+						}
+						break;
+					}
+				}
+				leftSibling = index - 1;
+				rightSibling = index + 1;
+			}
+
+			treeNodeBlock* parent = static_cast<treeNodeBlock*>(blkManager->accessBlock(cursor->getParentBlock()));		// Parent of currNode
+
+			bool isDeleted = false;
+			int index = 0;
+
+			// Try to find key in currNode
+			for (int i = 0; i < currNode->getLength(); i++) {
+				if (currNode->key[i] == key) {
+					isDeleted = true;
+					index = i;
+					std::cout << "Key found, deleting key..." << std::endl;
+				}
+			}
+
+			// Key not in B+ tree
+			if (!isDeleted) {
+				std::cout << "Key not found." << std::endl;
+				return;
+			}
+
+			// Delete linked list
+			if (blkManager->accessBlock(currNode->ptrs[index].getBlock())->type == 2) {
+				linkedListNodeBlock *toBeDeleted = static_cast<linkedListNodeBlock*>(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
+
+				while (toBeDeleted->nextBlock.entry != -1) {
+					linkedListNodeBlock *currDelete = toBeDeleted;
+					toBeDeleted = static_cast<linkedListNodeBlock*>(blkManager->accessBlock(toBeDeleted->nextBlock.getBlock()));
+					blkManager->deleteBlock(currDelete->nextBlock.getBlock());
+				}
+			}
+			else if (blkManager->accessBlock(currNode->ptrs[index].getBlock())->type == 0) {
+				RecordBlock *toBeDeleted = static_cast<RecordBlock*>(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
+				blkManager->deleteBlock(currNode->ptrs[index].getBlock());
+			}
+
+			// Delete key
+			currNode->key[index] = 0;
+			currNode->ptrs[index].entry = 0;
+
+			// Move subsequent keys and pointers 1 position forward
+			for (int i = index; i < currNode->getLength(); i++) {
+				currNode->key[i] = currNode->key[i + 1];
+				currNode->ptrs[i] = currNode->ptrs[i + 1]; // Not sure how this will go but should be correct
+			}
+
+			// Update last pointer in currNode
+			currNode->ptrs[currNode->getLength() - 1] = currNode->ptrs[currNode->getLength()];
+
+			// Case 2 and 3
+			treeNodeBlock *leftNode;
+			treeNodeBlock *rightNode;
+
+			// Check if left sibling exists
+			if (leftSibling >= 0) {
+				leftNode = (treeNodeBlock*)blkManager->accessBlock(parent->ptrs[leftSibling].getBlock());
+			}
+
+			// Check if right sibling exists
+			if (rightSibling <= blkManager->keyPerIndexBlock + 1) {
+				rightNode = (treeNodeBlock*)blkManager->accessBlock(parent->ptrs[rightSibling].getBlock());
+			}
+
+			// Left sibling can make a transfer
+			if (leftNode != NULL && leftNode->getLength() >= ceil((NUM_KEY_INDEX + 1) / 2)) {
+				// Make space for the transfer
+				for (int i = currNode->getLength(); i > 0; i--) {
+					currNode->key[i - 1] = currNode->key[i - 2];
+					currNode->ptrs[i] = currNode->ptrs[i - 1];
+				}
+
+				unsigned int unnecessaryKey = leftNode->key[leftNode->getLength() - 1];
+
+				// Transfer key from leftNode to currNode
+				currNode->key[0] = leftNode->key[leftNode->getLength() - 1];
+				currNode->ptrs[0] = leftNode->ptrs[leftNode->getLength() - 1];
+
+				// Update leftNode's last pointer and remove last key
+				leftNode->ptrs[leftNode->getLength() - 1] = leftNode->ptrs[leftNode->getLength()];
+
+				// Update parent
+				parent->key[leftSibling + 1] = cursor->key[0];
+				deleteKey(unnecessaryKey, currNode->getParentBlock(), curr);
+				return;
+				}
+			// Right sibling can make a transfer
+			else if (rightNode != NULL && rightNode->getLength() >= ceil((blkManager->keyPerIndexBlock + 1) / 2)) {			
+				// Transfer key from rightNode to currNode
+				currNode->key[currNode->getLength() - 1] = rightNode->key[0];
+				currNode->ptrs[currNode->getLength() - 1] = rightNode->ptrs[0];
+
+				unsigned int unnecessaryKey = leftNode->key[rightNode->getLength() - 1];
+
+				// Remove rightNode's first key and update subsequent pointers and keys
+				for (int i = 0; i < rightNode->getLength(); i++) {
+					rightNode->key[i] = rightNode->key[i + 1];
+					rightNode->ptrs[i] = rightNode->ptrs[i + 1];
+				}
+				rightNode->ptrs[rightNode->getLength()] = rightNode->ptrs[leftNode->getLength() + 1];
+
+				// Update parent
+				parent->key[rightSibling] = rightNode->key[0];
+				deleteKey(unnecessaryKey, currNode->getParentBlock(), curr);
+				return;
+			}
+
+			// Merge leftNode and currNode
+			else if (leftNode != NULL)
+			{
+				// Transfer all keys and pointers from currNode to leftNode
+				for (int i = leftNode->getLength(), j = 0; j < currNode->getLength(); i++, j++)
+				{
+					leftNode->key[i] = currNode->key[j];
+					leftNode->ptrs[i + 1] = currNode->ptrs[j];
+				}
+				leftNode->ptrs[leftNode->getLength()] = currNode->ptrs[leftNode->getLength()];
+
+				// Delete currNode from parent
+				deleteKey(parent->key[leftSibling + 1], currNode->getParentBlock(), parent->ptrs[leftSibling].getBlock());
+			}
+			// Merge with rightNode
+			else
+			{
+				// Transfer all keys and pointers from rightNode to currNode
+				for (int i = currNode->getLength(), j = 0; j < rightNode->getLength(); i++, j++)
+				{
+					currNode->key[i] = rightNode->key[j];
+					currNode->ptrs[i + 1] = rightNode->ptrs[j];
+				}
+				currNode->ptrs[currNode->getLength()] = rightNode->ptrs[rightNode->getLength()];
+
+				// Delete rightNode from parent
+				deleteKey(parent->key[rightSibling], currNode->getParentBlock(), parent->ptrs[rightSibling].getBlock());
+			}
+
+		}
+		
+		// Delete currNode
+		std::cout << "Deleting node..." << std::endl;
+		blkManager->deleteBlock(curr);
+		return;
+	}
+
 
 	// Print out a node block for BPlusTree
 	void printTreeNode(unsigned int nodeIndex){
