@@ -144,6 +144,9 @@ unsigned int BlockManager::createBlocks(unsigned int numBlocks){
 }*/
 
 block * BlockManager::accessBlock(unsigned int index) {
+    if(index > blockPtrArray.size()){
+        return nullptr;
+    }
     if(blockPtrArray[index-1]->type == 0){
         accessedDataBlocks.insert(index-1);
         if(firstData.size() < 5){

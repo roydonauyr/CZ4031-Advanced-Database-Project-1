@@ -80,7 +80,7 @@ int main() {
         }
         i++;
     }
-    std::cout<<"------Exercise 2----------"<<std::endl;
+    std::cout<<std::endl<<"------Exercise 2----------"<<std::endl;
     //std::cout<<"Number of blocks used total is: "<<blkManager.getNumBlocks()<<std::endl;
     std::cout<<"Number of nodes in B+ tree (Equal to number of blocks): "<<blkManager.numTreeBlocks<<std::endl;
     std::cout<<"Height of B+ tree is: "<<getHeight(&tree)<<std::endl;
@@ -90,5 +90,18 @@ int main() {
     std::cout<<"Content of 1st child node: "<<std::endl;
     treeNodeBlock* root = (treeNodeBlock*)blkManager.accessBlock(tree.rootNode);
     tree.printTreeNode(root->ptrs[0].getBlock());
+    std::cout<<std::endl<<"------Exercise 3----------"<<std::endl;
+    blkManager.clearAccessed();
+    /*std::vector<Record> recs = tree.searchKeys(500);
+    std::cout<<"Number of records with key: "<<recs.size()<<std::endl;
+    std::cout<<"Number of data blocks accessed"<<blkManager.accessedDataBlocks.size()<<std::endl;
+    std::cout<<"First 5 data blocks"<<std::endl;
+    i = 0;
+    while(i<blkManager.firstData.size()){
+        i++;
+    }*/
+    //tree.deleteKey(1000, tree.rootNode, 0);
+    std::cout<<tree.searchBlockToContain(1000)<<std::endl;
+    tree.printTreeNode(95747);
     std::cout<<"DONE"<<std::endl;
 }
