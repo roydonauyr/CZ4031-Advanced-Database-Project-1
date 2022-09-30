@@ -91,8 +91,7 @@ int main() {
     std::cout<<"Content of 1st child node: "<<std::endl;
     treeNodeBlock* root = (treeNodeBlock*)blkManager.accessBlock(tree.rootNode);
     tree.printTreeNode(root->ptrs[0].getBlock());
-    tree.printTreeNode(89223);
-    tree.PrintLinkedListBlock(89535);
+    
     
     std::cout<<std::endl<<"------Exercise 3----------"<<std::endl;
     blkManager.clearAccessed();
