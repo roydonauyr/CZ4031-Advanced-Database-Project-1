@@ -126,16 +126,8 @@ int main() {
     std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
     std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
 
-    // /*std::vector<Record> recs = tree.searchKeys(500);
-    // std::cout<<"Number of records with key: "<<recs.size()<<std::endl;
-    // std::cout<<"Number of data blocks accessed"<<blkManager.accessedDataBlocks.size()<<std::endl;
-    // std::cout<<"First 5 data blocks"<<std::endl;
-    // i = 0;
-    // while(i<blkManager.firstData.size()){
-    //     i++;
-    // }*/
-    // //tree.deleteKey(1000, tree.rootNode, 0);
-    // std::cout<<tree.searchBlockToContain(1000)<<std::endl;
-    // tree.printTreeNode(95747);
+    std::cout<<std::endl<<"------Exercise 4----------"<<std::endl;
+    blkManager.clearAccessed();
+   
     std::cout<<"DONE"<<std::endl;
 }
