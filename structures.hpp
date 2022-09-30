@@ -37,6 +37,20 @@ public:
         strncpy(tconst,input.c_str(),10);
     }
 
+    void printRecord(){
+        std::cout<<"----Record details----"<<std::endl;
+
+        printf("Average rating is: %.1f\n",getAverageRating());
+        std::cout<<"Num votes is: "<<numVotes<<std::endl;
+        std::cout<<"Tconst is: "<<getTconst()<<"\n"<<std::endl;
+        
+    }
+
+    //To be used for calculation
+    float getAverageRating(){
+        return float(avgRating.ones) + float(avgRating.decimal)/10;
+    }
+
 private:
     char tconst[10];
 };

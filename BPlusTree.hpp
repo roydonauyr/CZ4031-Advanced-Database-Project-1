@@ -20,120 +20,214 @@ public:
 	BPlusTree(BlockManager *mgr){
 		this->blkManager = mgr;
 	}
-	std::vector<Record> searchKeys(unsigned int key)
-	{	
-		treeNodeBlock *root = (treeNodeBlock *)blkManager->accessBlock(rootNode); 
+
+	// Print out a node block for BPlusTree
+	void printTreeNode(unsigned int nodeIndex){
+		treeNodeBlock* curNode = (treeNodeBlock*) blkManager->accessBlock(nodeIndex);
+		printf("\n------------------------------------------\n");
+		std::cout<<"Block id is: "<<nodeIndex<<std::endl;
+		std::cout<<"Parent id is: "<<curNode->getParentBlock()<<std::endl;
+		std::cout<<"Type is: "<<(unsigned int)curNode->type<<std::endl;
+		std::cout<<"Keys: "<<std::endl;
+		for (unsigned int key: curNode->key){
+			std::cout<<key<<" ";
+		}
+		std::cout<<std::endl;
+		std::cout<<"Ptrs: "<<std::endl;
+		for (Pointer ptr: curNode->ptrs){
+			std::cout<<ptr.getBlock()<<" ";
+		}
+		std::cout<<std::endl;
+	}
+
+	//Print linkedList Block
+	void PrintLinkedListBlock(unsigned int LinkedListIndex){
+		printf("\n------------------------------------------\n");
+		linkedListNodeBlock* curNode = (linkedListNodeBlock*) blkManager->accessBlock(LinkedListIndex);
+		std::cout<<"Block id is: "<<(unsigned int)LinkedListIndex<<std::endl;
+		std::cout<<"Type is: "<<(unsigned int)curNode->type<<std::endl;
+		std::cout<<"Record addresses: "<<std::endl;
+		for (Pointer ptr: curNode->pointers){
+			std::cout<<ptr.getBlock()<<" ";
+		}
+		std::cout<<"\n"<<"Next linkedList Block Pointer: "<<curNode->nextBlock.getBlock()<<std::endl;
+	}
+
+	//Search function
+	std::vector<Record> searchKeys(unsigned int key){
 		std::vector<Record> results;
-		std::vector<int> block_ids;
-		int id_counter = 0;
+		unsigned int curIndex = rootNode;
+		treeNodeBlock* curBlock = (treeNodeBlock*) blkManager->accessBlock(rootNode);
+		while(curBlock -> type != 2){
+			unsigned int i = 0;
+			while(i<curBlock->getLength() && key>curBlock->key[i]){
+				i++;
+			}
+			curIndex = curBlock->ptrs[i].getBlock();
+			curBlock = (treeNodeBlock*) blkManager->accessBlock(curIndex);
+		}
+		
 
-		block_ids.push_back(rootNode);
-		id_counter++;
-	
-		bool search_failed = false; // if no such key exists
-
-		block *cursor = root; // initialise cursor at root
-
-		while (cursor != nullptr || !search_failed) { // while loop till manually break or finish searching
-			switch (cursor->type) {
-				// for record blocks
-				case 0:
-				{
-					RecordBlock * record_block = (RecordBlock *) cursor; // casting
-
-					for (int i = 0; i < record_block->records.size(); i++) { // check all records for matching key
-						if (record_block->records[i].numVotes == key) {
-							results.push_back(record_block->records[i]); // push matching records into results set
-						} 
-					}
-
+		//Now curIndex and curBlock should be leaf node
+		unsigned int j = 0;
+		while(j<curBlock->getLength() && key!=curBlock->key[j]){
+			j++;
+		}
+		if(j == curBlock->getLength()){
+			std::cout<<"Key does not exist"<<std::endl;
+			return results;
+		}
+		unsigned int curBlockIndex = curBlock->ptrs[j].getBlock();
+		if (blkManager->accessBlock(curBlockIndex) ->type == 0){
+			RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(curBlockIndex); 
+			unsigned int accessIndex = curBlock->ptrs[j].entry;
+			results.push_back(curRecordBlock->records[accessIndex]);
+		}
+		else if (blkManager -> accessBlock(curBlockIndex) ->type == 3){
+			linkedListNodeBlock* linkedList = (linkedListNodeBlock*) blkManager -> accessBlock(curBlockIndex);
+			//PrintLinkedListBlock(curBlockIndex);
+			for(Pointer record_pointer: linkedList->pointers){
+				if(record_pointer.getBlock() == 0){
 					break;
 				}
-				
-				//for interal nodes
-				case 1:
-				{
-					treeNodeBlock* internal_node = (treeNodeBlock *) cursor; // casting
-
-					for(int i = 0; i < internal_node->getLength(); i++) { // check all keys in index_node
-						
-						if(internal_node->key[i] == key) { // if internal node key is equal to key, access block pointed by i+1 pointer
-							
-							cursor = blkManager->accessBlock(internal_node->ptrs[i+1].getBlock()); // reset cursor to target block in next layer
-							
-							if (id_counter++ < 5) {// print if total index prints less than 5
-								// do printing if printing works
-								block_ids.push_back(internal_node->ptrs[i+1].getBlock());
-							}
-
-							break;
-						}
-						else if(internal_node->key[i] > key) { // if internal node key is > key, access block pointed by i pointer
-							
-							cursor = blkManager->accessBlock(internal_node->ptrs[i].getBlock()); // reset cursor to target block in next layer
-							
-							if (id_counter++ < 5) {// print if total index prints less than 5
-								// do printing if printing works
-								block_ids.push_back(internal_node->ptrs[i+1].getBlock());
-							}
-
-							break;
-						}
-					}
-					break;
-				}
-					
-
-				// for leaf nodes
-				// at the leaf node, can know if the search has failed or not
-				case 2:
-				{
-					treeNodeBlock * leaf_node = (treeNodeBlock *) cursor; 
-					search_failed = true;
-
-					for(int i = 0; i < leaf_node->getLength(); i++) { // check all leaf keys for matching
-						
-						if (leaf_node->key[i] == key) { // if dense == key, if sparse >= key
-							cursor = blkManager->accessBlock(leaf_node->ptrs[i].getBlock()); // change cursor to the recordblock containing the matching record
-							search_failed = false;	// record has been found, split to duplicates vs nonduplicates
-							
-							if (id_counter++ < 5) {// print if total index prints less than 5
-								// do printing if printing works
-								block_ids.push_back(leaf_node->ptrs[i+1].getBlock());
-							
-							}
-
-							break; // stop searching as key is already found
-						}
-					}
-					break;
-				}
-
-				// for linkedlist block
-				case 3:
-				{
-					linkedListNodeBlock *linked_list_node_block = (linkedListNodeBlock *)cursor; 
-					RecordBlock* record_block_cursor; // cursor for parsing recordblocks
-					// NOTE please help to check protection on linkedlistnodeblock variables
-
-					for (int i = 0; i < linked_list_node_block->pointers.size(); i++) { // change function to pointer.size() when available, currently is boilerplate
-						record_block_cursor = (RecordBlock *)blkManager->accessBlock(linked_list_node_block->pointers[i].getBlock()); // update record block cursor
-						for (int i = 0; i < record_block_cursor->records.size(); i++) {// check all records in current recordblock
-						// check all records for matching key
-						
-							if (record_block_cursor->records[i].numVotes == key) { // check if key matches could be removed leaving it in for sanity reasons
-								results.push_back(record_block_cursor->records[i]); // push matching records into results set
-							}
-						}
-					} 
-					if (linked_list_node_block->nextBlock.entry > -1) { // go to next linked block in linked list
-						cursor = blkManager->accessBlock(linked_list_node_block->nextBlock.getBlock()); // update cursor
-					}
-					break;
-				}
+				unsigned int accessIndex = record_pointer.entry;
+				unsigned int blockIndex = record_pointer.getBlock();
+				RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(blockIndex);
+				results.push_back(curRecordBlock->records[accessIndex]);
 			}
 			
-		} return results; // return results set count be empty if not found ez
+			while(linkedList->nextBlock.getBlock() != 0){
+				//Switch to next linkedlist
+				unsigned int nextLinkedListIndex = linkedList->nextBlock.getBlock();
+				linkedList = (linkedListNodeBlock*) blkManager -> accessBlock(nextLinkedListIndex);
+				for(Pointer record_pointer: linkedList->pointers){
+					if(record_pointer.getBlock() == 0){
+						break;
+					}
+					unsigned int accessIndex = record_pointer.entry;
+					unsigned int blockIndex = record_pointer.getBlock();
+					RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(blockIndex);
+					results.push_back(curRecordBlock->records[accessIndex]);
+				}
+			}
+		}
+		return results;
+	}
+
+	// std::vector<Record> searchKeys(unsigned int key)
+	// {	
+	// 	treeNodeBlock *root = (treeNodeBlock *)blkManager->accessBlock(rootNode); 
+	// 	std::vector<Record> results;
+	// 	std::vector<int> block_ids;
+	// 	int id_counter = 0;
+
+	// 	block_ids.push_back(rootNode);
+	// 	id_counter++;
+	
+	// 	bool search_failed = false; // if no such key exists
+
+	// 	block *cursor = root; // initialise cursor at root
+
+	// 	while (cursor != nullptr || !search_failed) { // while loop till manually break or finish searching
+	// 		switch (cursor->type) {
+	// 			// for record blocks
+	// 			case 0:
+	// 			{
+	// 				RecordBlock * record_block = (RecordBlock *) cursor; // casting
+
+	// 				for (int i = 0; i < record_block->records.size(); i++) { // check all records for matching key
+	// 					if (record_block->records[i].numVotes == key) {
+	// 						results.push_back(record_block->records[i]); // push matching records into results set
+	// 					} 
+	// 				}
+
+	// 				break;
+	// 			}
+				
+	// 			//for interal nodes
+	// 			case 1:
+	// 			{
+	// 				treeNodeBlock* internal_node = (treeNodeBlock *) cursor; // casting
+
+	// 				for(int i = 0; i < internal_node->getLength(); i++) { // check all keys in index_node
+						
+	// 					if(internal_node->key[i] == key) { // if internal node key is equal to key, access block pointed by i+1 pointer
+							
+	// 						cursor = blkManager->accessBlock(internal_node->ptrs[i+1].getBlock()); // reset cursor to target block in next layer
+							
+	// 						if (id_counter++ < 5) {// print if total index prints less than 5
+	// 							// do printing if printing works
+	// 							block_ids.push_back(internal_node->ptrs[i+1].getBlock());
+	// 						}
+
+	// 						break;
+	// 					}
+	// 					else if(internal_node->key[i] > key) { // if internal node key is > key, access block pointed by i pointer
+							
+	// 						cursor = blkManager->accessBlock(internal_node->ptrs[i].getBlock()); // reset cursor to target block in next layer
+							
+	// 						if (id_counter++ < 5) {// print if total index prints less than 5
+	// 							// do printing if printing works
+	// 							block_ids.push_back(internal_node->ptrs[i+1].getBlock());
+	// 						}
+
+	// 						break;
+	// 					}
+	// 				}
+	// 				break;
+	// 			}
+					
+
+	// 			// for leaf nodes
+	// 			// at the leaf node, can know if the search has failed or not
+	// 			case 2:
+	// 			{
+	// 				treeNodeBlock * leaf_node = (treeNodeBlock *) cursor; 
+	// 				search_failed = true;
+
+	// 				for(int i = 0; i < leaf_node->getLength(); i++) { // check all leaf keys for matching
+						
+				// 		if (leaf_node->key[i] == key) { // if dense == key, if sparse >= key
+				// 			cursor = blkManager->accessBlock(leaf_node->ptrs[i].getBlock()); // change cursor to the recordblock containing the matching record
+				// 			search_failed = false;	// record has been found, split to duplicates vs nonduplicates
+							
+				// 			if (id_counter++ < 5) {// print if total index prints less than 5
+				// 				// do printing if printing works
+				// 				block_ids.push_back(leaf_node->ptrs[i+1].getBlock());
+							
+				// 			}
+
+				// 			break; // stop searching as key is already found
+				// 		}
+				// 	}
+				// 	break;
+				// }
+
+				// // for linkedlist block
+				// case 3:
+				// {
+				// 	linkedListNodeBlock *linked_list_node_block = (linkedListNodeBlock *)cursor; 
+				// 	RecordBlock* record_block_cursor; // cursor for parsing recordblocks
+				// 	// NOTE please help to check protection on linkedlistnodeblock variables
+
+				// 	for (int i = 0; i < linked_list_node_block->pointers.size(); i++) { // change function to pointer.size() when available, currently is boilerplate
+				// 		record_block_cursor = (RecordBlock *)blkManager->accessBlock(linked_list_node_block->pointers[i].getBlock()); // update record block cursor
+				// 		for (int i = 0; i < record_block_cursor->records.size(); i++) {// check all records in current recordblock
+				// 		// check all records for matching key
+						
+				// 			if (record_block_cursor->records[i].numVotes == key) { // check if key matches could be removed leaving it in for sanity reasons
+				// 				results.push_back(record_block_cursor->records[i]); // push matching records into results set
+				// 			}
+				// 		}
+				// 	} 
+		// 			if (linked_list_node_block->nextBlock.entry > -1) { // go to next linked block in linked list
+		// 				cursor = blkManager->accessBlock(linked_list_node_block->nextBlock.getBlock()); // update cursor
+		// 			}
+		// 			break;
+		// 		}
+		// 	}
+			
+		// } return results; // return results set count be empty if not found ez
 		
 		// if (root == NULL)
 		// {
@@ -176,7 +270,7 @@ public:
 		// 	cout << "Not found\n";
 		// 	// send not found not sure if need to return nullptr
 		// }
-	}
+	// }
 
 	void deleteKey(unsigned int key, unsigned int curr, unsigned int child)
 	{
@@ -439,26 +533,6 @@ public:
 		return;
 	}
 
-
-	// Print out a node block for BPlusTree
-	void printTreeNode(unsigned int nodeIndex){
-		treeNodeBlock* curNode = (treeNodeBlock*) blkManager->accessBlock(nodeIndex);
-		printf("------------------------------------------\n");
-		std::cout<<"Block id is: "<<nodeIndex<<std::endl;
-		std::cout<<"Parent id is: "<<curNode->getParentBlock()<<std::endl;
-		std::cout<<"Type is: "<<(unsigned int)curNode->type<<std::endl;
-		std::cout<<"Keys: "<<std::endl;
-		for (unsigned int key: curNode->key){
-			std::cout<<key<<" ";
-		}
-		std::cout<<std::endl;
-		std::cout<<"Ptrs: "<<std::endl;
-		for (Pointer ptr: curNode->ptrs){
-			std::cout<<ptr.getBlock()<<" ";
-		}
-		std::cout<<std::endl;
-	}
-
 	// Assuming that we have a root node, finds the block which should contain a particular key.
 	// Block need not have space to contain this key
 	unsigned int searchBlockToContain(unsigned int key){
@@ -493,6 +567,11 @@ public:
 					linkedListNodeBlock* newLinkedList = (linkedListNodeBlock*)blkManager->accessBlock(newLinkedListIndex);
 					newLinkedList->type = 3;
 					newLinkedList->pointers[0];
+					Pointer newPtr;
+					newPtr.setBlock(newLinkedListIndex);
+					curLinkedList->nextBlock = newPtr;
+					newLinkedList->pointers[0] = ptr;
+					return;
 				}
 				else{
 					// Continue searching next block
@@ -504,6 +583,7 @@ public:
 				i++;
 			}
 		}
+		curLinkedList->pointers[i] = ptr;
 	}
 	//Find lowest bound of a treeNodeBlock
 	unsigned int lowestBound(treeNodeBlock* block) const {
@@ -693,6 +773,9 @@ public:
 						newLinkedList->type = 3;
 						newLinkedList->pointers[0] = pointed;
 						newLinkedList->pointers[1] = ptr;
+						Pointer newLinkedListPointer;
+						newLinkedListPointer.setBlock(newLinkedListIndex);
+						insertBlock->ptrs[locationToInsert] = newLinkedListPointer;
 					}
 				}
 				else{
@@ -757,6 +840,9 @@ public:
 						newLinkedList->type = 3;
 						newLinkedList->pointers[0] = pointed;
 						newLinkedList->pointers[1] = ptr;
+						Pointer newLinkedListPointer;
+						newLinkedListPointer.setBlock(newLinkedListIndex);
+						insertBlock->ptrs[locationToInsert] = newLinkedListPointer;
 					}
 					//printTreeNode(blockToInsert);
 				}

@@ -68,6 +68,7 @@ int main() {
     //std::cout<<"*TEST* Number of blocks used acc to blkManager"<<blkManager.numStorageBlocks<<std::endl;
     std::cout<<"Size used by storage is: "<<numBlocksStore * blkManager.blkSize<<"B"<<std::endl;
     tree.insert(test->records[0].numVotes, ptr);
+    //Records.size()
     while(i<Records.size()){
 
         ptr.setBlock(curBlockIndex);
@@ -90,18 +91,51 @@ int main() {
     std::cout<<"Content of 1st child node: "<<std::endl;
     treeNodeBlock* root = (treeNodeBlock*)blkManager.accessBlock(tree.rootNode);
     tree.printTreeNode(root->ptrs[0].getBlock());
+    tree.printTreeNode(89223);
+    tree.PrintLinkedListBlock(89535);
+    
     std::cout<<std::endl<<"------Exercise 3----------"<<std::endl;
     blkManager.clearAccessed();
-    /*std::vector<Record> recs = tree.searchKeys(500);
-    std::cout<<"Number of records with key: "<<recs.size()<<std::endl;
-    std::cout<<"Number of data blocks accessed"<<blkManager.accessedDataBlocks.size()<<std::endl;
-    std::cout<<"First 5 data blocks"<<std::endl;
-    i = 0;
-    while(i<blkManager.firstData.size()){
-        i++;
-    }*/
-    //tree.deleteKey(1000, tree.rootNode, 0);
-    std::cout<<tree.searchBlockToContain(1000)<<std::endl;
-    tree.printTreeNode(95747);
+    std::vector<Record> recs = tree.searchKeys(500);
+    unsigned int totalSearchIO = blkManager.accessedTreeBlocks.size() + blkManager.accessedDataBlocks.size();
+    std::cout<<std::endl<<"Total Number of Index Nodes accessed (Unique): "<<blkManager.accessedTreeBlocks.size()<<std::endl;
+    std::cout<<std::endl<<"First 5 Unique Index Nodes accessed: "<<std::endl;
+    for(unsigned int nodeIndex: blkManager.firstTree){
+        printf("%d||", nodeIndex);
+    }
+    for(unsigned int nodeIndex: blkManager.firstTree){
+        if(blkManager.accessBlock(nodeIndex)->type == 3){
+            tree.PrintLinkedListBlock(nodeIndex);
+        }else{
+            tree.printTreeNode(nodeIndex);
+        }
+    }
+    std::cout<<std::endl<<"\n"<<"Total Number of Data Blocks accessed (Unique): "<<blkManager.accessedDataBlocks.size()<<std::endl;
+    std::cout<<std::endl<<"First 5 Unique Data Blocks accessed: "<<std::endl;
+    for(unsigned int recordBlockIndex: blkManager.firstData){
+        printf("%d||", recordBlockIndex);
+    }
+    for(unsigned int recordBlockIndex: blkManager.firstData){
+        blkManager.printRecordBlock(recordBlockIndex);
+    }
+    float averageOfAverageRating = 0.0;
+    for(Record record: recs){
+        averageOfAverageRating += record.getAverageRating();
+    }
+    averageOfAverageRating = averageOfAverageRating/recs.size();
+    std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
+    std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
+
+    // /*std::vector<Record> recs = tree.searchKeys(500);
+    // std::cout<<"Number of records with key: "<<recs.size()<<std::endl;
+    // std::cout<<"Number of data blocks accessed"<<blkManager.accessedDataBlocks.size()<<std::endl;
+    // std::cout<<"First 5 data blocks"<<std::endl;
+    // i = 0;
+    // while(i<blkManager.firstData.size()){
+    //     i++;
+    // }*/
+    // //tree.deleteKey(1000, tree.rootNode, 0);
+    // std::cout<<tree.searchBlockToContain(1000)<<std::endl;
+    // tree.printTreeNode(95747);
     std::cout<<"DONE"<<std::endl;
 }
