@@ -69,8 +69,8 @@ int main() {
     std::cout<<"Size used by storage is: "<<numBlocksStore * blkManager.blkSize<<"B"<<std::endl;
     tree.insert(test->records[0].numVotes, ptr);
     //Records.size()
-    while(i<Records.size()){
-
+    // while(i<Records.size()){
+    while(i<100000){
         ptr.setBlock(curBlockIndex);
         ptr.entry=i%blkManager.recordsPerBlock;
         //std::cout<<std::endl<<"INSERTING: "<<curBlock->records[i%blkManager.recordsPerBlock].numVotes<<" PTR: "<<ptr.getBlock()<<std::endl;
@@ -128,6 +128,10 @@ int main() {
 
     std::cout<<std::endl<<"------Exercise 4----------"<<std::endl;
     blkManager.clearAccessed();
+
+
+    std::cout<<std::endl<<"------Exercise 5----------"<<std::endl;
+    tree.deleteKey(1000, 0, 0);
    
     std::cout<<"DONE"<<std::endl;
 }

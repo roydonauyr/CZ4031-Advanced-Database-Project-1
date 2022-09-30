@@ -272,83 +272,19 @@ public:
 		// }
 	// }
 
-	void deleteKey(unsigned int key, unsigned int curr, unsigned int child)
-	{
-		// Set currNode and child to NULL on first run
-		// if key is not valid, return
-		//
-		// if currNode is root
-		//	if there is only 1 key in the root
-		//		set 1 of the children (key != key to be deleted) as root
-		//		delete old root (i.e. currNode)
-		//	if root is empty
-		//		delete root
-		// else if currNode is null
-		//	for each non-leaf node in B+ tree
-		//		record parent, leftSibling and rightSibling of currNode
-		//		for each key[i] in node
-		//			if key < key[i] (i.e. key potentially found)
-		//				go to child node via ith pointer
-		//				break
-		//	instantiate deleted = false and index = 0 (to check if key is found and the key's index within the node)
-		//	for each key in currNode (currNode is a leaf node)
-		//		if key == key in leaf node
-		//			deleted = false
-		//			index = key's current index
-		//	if deleted = false (i.e. key not found)
-		//		return
-		//	for each key in currNode after index
-		//		move pointer and key 1 index forward
-		// else
-		//	if currNode is leaf && remaining keys >= floor((n + 1) / 2) || currNode is not leaf && remaining keys >= floor(n / 2) (i.e. case 1)
-		// 		delete(key, parent) (delete key from parent if necessary)
-		//		return
-		//	else
-		//		instantiate leftNode, rightNode and redundantKey
-		//		if leftSibling exists
-		//			leftNode = node at leftSibling
-		//		if rightSibling exists
-		//			rightNode = node at rightSibling
-		//		if (leftNode is leaf && keys >= floor((n + 1) / 2)) || (leftNode is not leaf && keys >= floor(n / 2)) (case 2)
-		//			create space for transfer (if needed)
-		//			transfer a key from leftNode to currNode
-		//			redundantKey = transferred key
-		//			delete redundantKey in leftNode
-		//			delete(redundantKey, parent)
-		//			return
-		//		else if (leftNode is leaf && keys >= floor((n + 1) / 2)) || (leftNode is not leaf && keys >= floor(n / 2)) (case 2)
-		//			create space for transfer (if needed)
-		//			transfer a key from rightNode to currNode
-		//			redundantKey = transferred key
-		//			delete redundantKey in rightNode
-		//			delete(redundantKey, parent)
-		//			return
-		//		else (case 3)
-		//			if leftNode != null (i.e. leftNode exists)
-		//				merge leftNode and currNode
-		//				delete currNode from parent
-		//			else if rightNode != null (i.e. rightNode exists)
-		//				merge currNode and rightNode
-		//				delete currNode from parent
-		//			delete currNode
-		//			delete(key, parent)
-		//			return
-
-
-		
-
-
+	void deleteKey(unsigned int key, unsigned int curr, unsigned int child) {
 		// Check if key is valid
-		if (key == 0) {
+		if (key < 0) {
 			std::cout << "Key is null." << std::endl;
 			return;
 		}
 
-		treeNodeBlock *currNode = (treeNodeBlock*)(blkManager->accessBlock(curr));
+		treeNodeBlock *currNode = NULL;
 
 		// If currNode is root
 		if (curr == rootNode) {
 			// Remove currNode entirely and set a child as root
+			currNode = (treeNodeBlock*)(blkManager->accessBlock(rootNode));
 			if (currNode->getLength() == 1) {
 				if (currNode->ptrs[0].getBlock() == child) {
 					rootNode = currNode->ptrs[0].getBlock();
@@ -381,9 +317,7 @@ public:
 					if (key < cursor->key[i] || i == cursor->getLength()) {
 						// Go to child node
 						cursor = (treeNodeBlock*)(blkManager->accessBlock(cursor->ptrs[i].getBlock()));
-						if (currNode == NULL) {
-							currNode = (treeNodeBlock*)(cursor);
-						}
+						curr = cursor->ptrs[i].getBlock();
 						break;
 					}
 				}
@@ -391,17 +325,19 @@ public:
 				rightSibling = index + 1;
 			}
 
-			treeNodeBlock* parent = static_cast<treeNodeBlock*>(blkManager->accessBlock(cursor->getParentBlock()));		// Parent of currNode
+			currNode = cursor;
+			treeNodeBlock* parent = (treeNodeBlock*)(blkManager->accessBlock(cursor->getParentBlock()));		// Parent of currNode
 
 			bool isDeleted = false;
 			int index = 0;
 
 			// Try to find key in currNode
-			for (int i = 0; i < currNode->getLength(); i++) {
-				if (currNode->key[i] == key) {
+			for (int i = 0; i < cursor->getLength(); i++) {
+				if (cursor->key[i] == key) {
 					isDeleted = true;
 					index = i;
 					std::cout << "Key found, deleting key..." << std::endl;
+					break;
 				}
 			}
 
@@ -412,17 +348,22 @@ public:
 			}
 
 			// Delete linked list
-			if (blkManager->accessBlock(currNode->ptrs[index].getBlock())->type == 2) {
-				linkedListNodeBlock *toBeDeleted = static_cast<linkedListNodeBlock*>(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
+			if (blkManager->accessBlock(currNode->ptrs[index].getBlock())->type == 3) {
+				linkedListNodeBlock *toBeDeleted = (linkedListNodeBlock*)(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
+				unsigned int currDelete = currNode->ptrs[index].getBlock();
+				unsigned int next = toBeDeleted->nextBlock.entry;
 
-				while (toBeDeleted->nextBlock.entry != -1) {
-					linkedListNodeBlock *currDelete = toBeDeleted;
-					toBeDeleted = static_cast<linkedListNodeBlock*>(blkManager->accessBlock(toBeDeleted->nextBlock.getBlock()));
-					blkManager->deleteBlock(currDelete->nextBlock.getBlock());
-				}
+				do {
+					blkManager->deleteBlock(currDelete);
+					currDelete = toBeDeleted->nextBlock.getBlock();
+					toBeDeleted = (linkedListNodeBlock*)(blkManager->accessBlock(toBeDeleted->nextBlock.getBlock()));
+					if (next != -1)
+						next = toBeDeleted->nextBlock.entry;
+				} while (next != -1);
 			}
-			else if (blkManager->accessBlock(currNode->ptrs[index].getBlock())->type == 0) {
-				RecordBlock *toBeDeleted = static_cast<RecordBlock*>(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
+			// Delete record
+			else if ((blkManager->accessBlock(currNode->ptrs[index].getBlock()))->type == 0) {
+				RecordBlock *toBeDeleted = (RecordBlock*)(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
 				blkManager->deleteBlock(currNode->ptrs[index].getBlock());
 			}
 
@@ -432,8 +373,9 @@ public:
 
 			// Move subsequent keys and pointers 1 position forward
 			for (int i = index; i < currNode->getLength(); i++) {
-				currNode->key[i] = currNode->key[i + 1];
+				// currNode->key[i] = currNode->key[i + 1];
 				currNode->ptrs[i] = currNode->ptrs[i + 1]; // Not sure how this will go but should be correct
+				currNode->key[i] = lowestBound(currNode);
 			}
 
 			// Update last pointer in currNode
@@ -454,7 +396,7 @@ public:
 			}
 
 			// Left sibling can make a transfer
-			if (leftNode != NULL && leftNode->getLength() >= ceil((NUM_KEY_INDEX + 1) / 2)) {
+			if (leftSibling != -1 && leftNode->getLength() >= ceil((NUM_KEY_INDEX + 1) / 2) && currNode->getLength() < ceil((NUM_KEY_INDEX + 1) / 2)) {
 				// Make space for the transfer
 				for (int i = currNode->getLength(); i > 0; i--) {
 					currNode->key[i - 1] = currNode->key[i - 2];
@@ -476,7 +418,7 @@ public:
 				return;
 				}
 			// Right sibling can make a transfer
-			else if (rightNode != NULL && rightNode->getLength() >= ceil((blkManager->keyPerIndexBlock + 1) / 2)) {			
+			else if (rightSibling != -1 && rightNode->getLength() >= ceil((blkManager->keyPerIndexBlock + 1) / 2) && currNode->getLength() < ceil((NUM_KEY_INDEX + 1) / 2)) {			
 				// Transfer key from rightNode to currNode
 				currNode->key[currNode->getLength() - 1] = rightNode->key[0];
 				currNode->ptrs[currNode->getLength() - 1] = rightNode->ptrs[0];
@@ -497,7 +439,7 @@ public:
 			}
 
 			// Merge leftNode and currNode
-			else if (leftNode != NULL)
+			else if (leftNode != NULL && currNode->getLength() < ceil((NUM_KEY_INDEX + 1) / 2))
 			{
 				// Transfer all keys and pointers from currNode to leftNode
 				for (int i = leftNode->getLength(), j = 0; j < currNode->getLength(); i++, j++)
@@ -511,8 +453,7 @@ public:
 				deleteKey(parent->key[leftSibling + 1], currNode->getParentBlock(), parent->ptrs[leftSibling].getBlock());
 			}
 			// Merge with rightNode
-			else
-			{
+			else if (currNode->getLength() < ceil((NUM_KEY_INDEX + 1) / 2)) {
 				// Transfer all keys and pointers from rightNode to currNode
 				for (int i = currNode->getLength(), j = 0; j < rightNode->getLength(); i++, j++)
 				{

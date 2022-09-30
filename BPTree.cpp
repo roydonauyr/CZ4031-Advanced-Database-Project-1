@@ -438,8 +438,8 @@ public:
 
 
 		// Check if key is valid
-		if (key == NULL) {
-			cout << "Key is null." << endl;
+		if (key < 0) {
+			std::cout << "Key is null." << std::endl;
 			return;
 		}
 
@@ -456,11 +456,11 @@ public:
 					rootNode = currNode->ptrs[1].getBlock();
 				}
 
-				cout << "Root is too empty, changing root..." << endl;
+				std::cout << "Root is too empty, changing root..." << std::endl;
 				blkManager->deleteBlock(child);
 			}
 			else if (currNode->getLength() == 0) {
-				cout << "No keys left in the tree. Killing tree..." << endl;
+				std::cout << "No keys left in the tree. Killing tree..." << std::endl;
 				rootNode = NULL;
 			}
 
@@ -501,13 +501,13 @@ public:
 				if (currNode->key[i] == key) {
 					isDeleted = true;
 					index = i;
-					cout << "Key found, deleting key..." << endl;
+					std::cout << "Key found, deleting key..." << std::endl;
 				}
 			}
 
 			// Key not in B+ tree
 			if (!isDeleted) {
-				cout << "Key not found." << endl;
+				std::cout << "Key not found." << std::endl;
 				return;
 			}
 
@@ -528,7 +528,7 @@ public:
 
 			// Delete key
 			currNode->key[index] = 0;
-			currNode->ptrs[index].entry = (char) "0";
+			currNode->ptrs[index].entry = 0;
 
 			// Move subsequent keys and pointers 1 position forward
 			for (int i = index; i < currNode->getLength(); i++) {
@@ -549,7 +549,7 @@ public:
 			}
 
 			// Check if right sibling exists
-			if (rightSibling <= N + 1) {
+			if (rightSibling <= blkManager->keyPerIndexBlock + 1) {
 				rightNode = static_cast<treeNodeBlock*>(blkManager->accessBlock(parent->ptrs[rightSibling].getBlock()));
 			}
 
@@ -624,11 +624,10 @@ public:
 				// Delete rightNode from parent
 				deleteKey(parent->key[rightSibling], currNode->getParentBlock(), parent->ptrs[rightSibling].getBlock());
 			}
-
 		}
 		
 		// Delete currNode
-		cout << "Deleting node..." << endl;
+		std::cout << "Deleting node..." << std::endl;
 		blkManager->deleteBlock(curr);
 		return;
 	}
