@@ -62,7 +62,6 @@ public:
 		// iterating through internal nodes to get to leaf nodes
 		while (curBlock -> type != 2) {  // while it is not a leaf node
 			unsigned int i = 0;
-
 			while (i<curBlock->getLength() && key>curBlock->key[i]) {
 				i++;
 			}
@@ -153,39 +152,33 @@ public:
 		// iterate through leaf node
 		unsigned int j = 0;
 		// find the index of the first key that falls in the range
-		while (j < curBlock->getLength() && curBlock->key[j] < LowerBound) {
-			j++;
-		}
-		if (j == curBlock->getLength()){
-			// iterated through that block, means lowerbound is larger than that block values
-			// but still need to consider upper bound
+		while (curBlock->key[0] <= UpperBound) {
+			j = 0;
+			while(LowerBound<curBlock->key[0]){
+				LowerBound+= 1;
+			}
+			//20000 //50000
+			while (j < curBlock->getLength() && LowerBound < curBlock->key[curBlock->key.size()-1] && LowerBound < UpperBound) {
+				if(LowerBound == curBlock->key[j]){
+				   leaf_indexes.push_back(curBlock->ptrs[j].getBlock());
+				   j++;
+				}
+				LowerBound+=1;
+			};
+			
 			curIndex = curBlock->ptrs[(curBlock->ptrs.size())-1].getBlock();
 			curBlock = (treeNodeBlock*) blkManager->accessBlock(curIndex);
 
-			j = 0;
-			while (j < curBlock->getLength() && curBlock->key[j] < UpperBound) {
-
-				// a key in the range is found, push into leaf indexes vector
-				if (curBlock->key[j] >= LowerBound && curBlock->key[j] <= UpperBound) {
-					leaf_indexes.push_back(curBlock->ptrs[j].getBlock());
-				}
-				// if the smallest key in the range is still not found yet
-				if (j == curBlock->getLength()) { 
-					curIndex = curBlock->ptrs[(curBlock->ptrs.size())-1].getBlock();
-					curBlock = (treeNodeBlock*) blkManager->accessBlock(curIndex);
-					j = 0;
-				}
-				// if no such key in the range
-				if (curBlock->key[j] > UpperBound) {
-					std::cout<<"Key does not exist in range"<<std::endl;
-					return results;
-				}
-				j++;
-			}
 		}
 
-		while (!leaf_indexes.empty()) {
-			unsigned int curBlockIndex = curBlock->ptrs[j].getBlock();
+		if(leaf_indexes.empty()){
+			std::cout<<"Key in range not found"<<std::endl;
+			return results;
+		}
+		
+		unsigned int count = 0;
+		while (count < leaf_indexes.size()) {
+			unsigned int curBlockIndex = leaf_indexes[count];
 
 			// directly accessing record blocks, no duplicates
 			if (blkManager->accessBlock(curBlockIndex) ->type == 0) {
@@ -227,7 +220,7 @@ public:
 					}
 				}
 			}
-			leaf_indexes.pop_back();
+			count+=1;
 		}
 		return results;
 	}
