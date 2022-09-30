@@ -35,9 +35,25 @@ public:
     block * accessBlock(unsigned int index);
     block * noLogAccessBlock(unsigned int index) const;
     void clearAccessed();
+
+    //Helper functions
+    void printRecordBlock(unsigned int recordBlockIndex);
+
     std::unordered_set<unsigned int> accessedDataBlocks, accessedTreeBlocks;
 
     std::vector<unsigned int> firstData, firstTree;
+};
+
+//print records in recordBlock
+void BlockManager::printRecordBlock(unsigned int recordBlockIndex){
+    printf("\n------------------------------------------\n");
+    RecordBlock* curNode = (RecordBlock*) accessBlock(recordBlockIndex);
+    std::cout<<"Block id is: "<<recordBlockIndex<<std::endl;
+    std::cout<<"Type is: "<<(unsigned int)curNode->type<<std::endl;
+    std::cout<<"Records: "<<std::endl;
+    for (Record record: curNode->records){
+        record.printRecord();
+    }
 };
 
 unsigned int BlockManager::getSize() const {
@@ -148,18 +164,18 @@ block * BlockManager::accessBlock(unsigned int index) {
         return nullptr;
     }
     if(blockPtrArray[index-1]->type == 0){
-        accessedDataBlocks.insert(index-1);
+        accessedDataBlocks.insert(index);
         if(firstData.size() < 5){
-            if(std::find(firstData.begin(), firstData.end(), index-1) == firstData.end()){
-                firstData.push_back(index-1);
+            if(std::find(firstData.begin(), firstData.end(), index) == firstData.end()){
+                firstData.push_back(index);
             }
         }
     }
     else{
-        accessedTreeBlocks.insert(index-1);
+        accessedTreeBlocks.insert(index);
         if(firstTree.size() < 5){
-            if(std::find(firstTree.begin(), firstTree.end(), index-1) == firstTree.end()){
-                firstTree.push_back(index-1);
+            if(std::find(firstTree.begin(), firstTree.end(), index) == firstTree.end()){
+                firstTree.push_back(index);
             }
         }
     }
