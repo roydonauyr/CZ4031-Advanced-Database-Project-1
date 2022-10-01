@@ -432,7 +432,7 @@ public:
 			else if (leftIndex != 0 && leftNode->getLength() <= minimum)
 			{
 				// Transfer all keys and pointers from currNode to leftNode
-				for (int i = leftNode->getLength(), j = 0; j < currNode->getLength(); i++, j++)
+				for (int i = leftNode->getLength()+1, j = 0; j < currNode->getLength(); i++, j++)
 				{
 					leftNode->key[i] = currNode->key[j];
 					leftNode->ptrs[i] = currNode->ptrs[j];
@@ -451,7 +451,7 @@ public:
 			// Merge with rightNode
 			else if (rightNodeIndex != 0 && rightNode->getLength() <= minimum) {
 				// Transfer all keys and pointers from rightNode to currNode
-				for (int i = currNode->getLength(), j = 0; j < rightNode->getLength(); i++, j++)
+				for (int i = currNode->getLength()+1, j = 0; j < rightNode->getLength(); i++, j++)
 				{
 					currNode->key[i] = rightNode->key[j];
 					currNode->ptrs[i] = rightNode->ptrs[j];
@@ -467,11 +467,10 @@ public:
 			}
 	}
 
-	void mergeParentNodes(unsigned int leftIndex, unsigned int currNodeIndex){
+	void mergeParentNodes(unsigned int leftIndex, unsigned int rightIndex, unsigned int currNodeIndex){
 			unsigned int minimum = (NUM_KEY_INDEX+1)/2;
 			treeNodeBlock *leftNode;
 			treeNodeBlock *rightNode;
-			unsigned int rightNodeIndex;
 			treeNodeBlock *currNode = (treeNodeBlock*) blkManager->accessBlock(currNodeIndex);
 
 			// Check if left sibling exists
@@ -480,47 +479,64 @@ public:
 			}
 
 			// Check if right sibling exists
-			if (currNode->ptrs[currNode->ptrs.size()-1].getBlock() != 0) {
-				rightNodeIndex = currNode->ptrs[currNode->ptrs.size()-1].getBlock();
-				rightNode = (treeNodeBlock*)blkManager->accessBlock(rightNodeIndex);
+			if (rightIndex != 0) {
+				rightNode = (treeNodeBlock*)blkManager->accessBlock(rightIndex);
 			}
 
 			// Left sibling can make a transfer
 			if (leftIndex != 0 && leftNode->getLength() > minimum) {
-				//1 2 3
-				//A B C next leaf node
+			
 				// Make space for the transfer
-				for (int i = currNode->getLength()-1; i > 0; i--) {
-					currNode->key[i] = currNode->key[i - 1];
+				for (int i = currNode->getLength(); i > 0; i--) {
 					currNode->ptrs[i] = currNode->ptrs[i-1];
 				}
 
-				
 
 				// Transfer key from leftNode to currNode
-				currNode->key[0] = leftNode->key[leftNode->getLength() - 1];
-				currNode->ptrs[0] = leftNode->ptrs[leftNode->getLength() - 1];
+				currNode->ptrs[0] = leftNode->ptrs[leftNode->getLength()];
+				leftNode->key[leftNode->getLength()-1] = 0;
 
+				// Update leftNode
+				int i = 1;
+				while(i<leftNode->getLength()-1){
+					treeNodeBlock* temp = (treeNodeBlock*) blkManager->accessBlock(leftNode->ptrs[i].getBlock());
+					leftNode->key[i-1] = lowestBound(temp);
+				}
 
-				// Update left leaf
-				leftNode->key[leftNode->getLength() - 1] = 0;
-				leftNode->ptrs[leftNode->getLength() - 1].setBlock(0);
-				leftNode->ptrs[leftNode->getLength() - 1].entry = -1;
-
+				//Update currNode
+				i = 1;
+				while(i<leftNode->getLength()){
+					treeNodeBlock* temp = (treeNodeBlock*) blkManager->accessBlock(leftNode->ptrs[i].getBlock());
+					leftNode->key[i-1] = lowestBound(temp);
+				}
+				
 				//update parent
 				updateParent(currNode->getParentBlock());
 				return;
 			}
 			// Right sibling can make a transfer
-			else if (rightNodeIndex != 0 && rightNode->getLength() >minimum) {			
+			else if (rightIndex != 0 && rightNode->getLength() >minimum) {			
 				// Transfer key from rightNode to currNode
-				currNode->key[currNode->getLength() - 1] = rightNode->key[0];
 				currNode->ptrs[currNode->getLength() - 1] = rightNode->ptrs[0];
+
+				//Update currNode
+				int i = 1;
+				while(i<currNode->getLength()){
+					treeNodeBlock* temp = (treeNodeBlock*) blkManager->accessBlock(currNode->ptrs[i].getBlock());
+					currNode->key[i-1] = lowestBound(temp);
+				}
 
 				// Remove rightNode's first key and update subsequent pointers and keys
 				for (int i = 0; i < rightNode->getLength(); i++) {
-					rightNode->key[i] = rightNode->key[i + 1];
 					rightNode->ptrs[i] = rightNode->ptrs[i + 1];
+				}
+				rightNode->key[rightNode->getLength()] = 0;
+
+				//Update rightNode
+				i = 1;
+				while(i<rightNode->getLength()+1){
+					treeNodeBlock* temp = (treeNodeBlock*) blkManager->accessBlock(rightNode->ptrs[i].getBlock());
+					currNode->key[i-1] = lowestBound(temp);
 				}
 
 				//update parent
@@ -532,14 +548,18 @@ public:
 			else if (leftIndex != 0 && leftNode->getLength() <= minimum)
 			{
 				// Transfer all keys and pointers from currNode to leftNode
-				for (int i = leftNode->getLength(), j = 0; j < currNode->getLength(); i++, j++)
+				for (int i = leftNode->getLength()+2, j = 0; j < currNode->getLength()+1; i++, j++)
 				{
-					leftNode->key[i] = currNode->key[j];
 					leftNode->ptrs[i] = currNode->ptrs[j];
 				}
-				leftNode->ptrs[leftNode->ptrs.size()-1] = currNode->ptrs[leftNode->ptrs.size()-1];
 
-				
+				//Update leftNode
+				int i = 1;
+				while(i<leftNode->getLength()+1){
+					treeNodeBlock* temp = (treeNodeBlock*) blkManager->accessBlock(leftNode->ptrs[i].getBlock());
+					currNode->key[i-1] = lowestBound(temp);
+				}
+
 				// Delete currNode from parent
 				unsigned int parentBlockIndex = currNode->getParentBlock();
 				blkManager->deleteBlock(currNodeIndex);
@@ -549,21 +569,27 @@ public:
 				
 			}
 			// Merge with rightNode
-			else if (rightNodeIndex != 0 && rightNode->getLength() <= minimum) {
+			else if (rightIndex != 0 && rightNode->getLength() <= minimum) {
 				// Transfer all keys and pointers from rightNode to currNode
-				for (int i = currNode->getLength(), j = 0; j < rightNode->getLength(); i++, j++)
+				for (int i = currNode->getLength()+2, j = 0; j < rightNode->getLength()+1; i++, j++)
 				{
-					currNode->key[i] = rightNode->key[j];
 					currNode->ptrs[i] = rightNode->ptrs[j];
 				}
 				currNode->ptrs[currNode->ptrs.size()-1] = rightNode->ptrs[rightNode->ptrs.size()-1];
 
+				//Update currNode
+				int i = 1;
+				while(i<leftNode->getLength()+1){
+					treeNodeBlock* temp = (treeNodeBlock*) blkManager->accessBlock(currNode->ptrs[i].getBlock());
+					currNode->key[i-1] = lowestBound(temp);
+				}
+
 				// Delete rightNode from parent
 				unsigned int parentBlockIndex = rightNode->getParentBlock();
-				blkManager->deleteBlock(rightNodeIndex);
+				blkManager->deleteBlock(rightIndex);
 
 				//recursion for parent
-				deleteKeyInternal(rightNodeIndex, parentBlockIndex);
+				deleteKeyInternal(rightIndex, parentBlockIndex);
 			}
 	}
 
@@ -597,6 +623,43 @@ public:
 			curParentBlockIndex = curParentBlock->getParentBlock();
 			level++;
 		}
+		
+		return foundParentIndex;
+		
+	}
+
+	unsigned int findRightIndex(unsigned int blockNumber){
+		unsigned int level;
+		if(blockNumber == rootNode){
+			return 0;
+		}
+
+		treeNodeBlock* block = (treeNodeBlock*) blkManager->accessBlock(blockNumber);
+		unsigned int curParentBlockIndex = block->getParentBlock();
+		treeNodeBlock* curParentBlock = (treeNodeBlock*) blkManager->accessBlock(curParentBlockIndex);
+		unsigned int foundParentIndex = 0;
+		
+		while(foundParentIndex<curParentBlock->ptrs.size() && curParentBlock->ptrs[foundParentIndex].getBlock() != blockNumber){
+			foundParentIndex ++;
+		}
+
+		unsigned int prevNodeIndex;
+		unsigned int prevParentIndex = curParentBlockIndex;
+		curParentBlockIndex = curParentBlock->getParentBlock();
+
+
+		int i = 0;
+		while(foundParentIndex!= 0 && curParentBlockIndex!= rootNode){
+			foundParentIndex = 0;
+			while(foundParentIndex<curParentBlock->ptrs.size() && curParentBlock->ptrs[foundParentIndex].getBlock() != prevParentIndex){
+				foundParentIndex++;
+			}
+			prevParentIndex = curParentBlockIndex;
+			curParentBlockIndex = curParentBlock->getParentBlock();
+			level++;
+		}
+
+		return foundParentIndex;
 		
 		
 	}
@@ -632,7 +695,9 @@ public:
 			currentNode->key[i-1] = lowestBound(childNode);
 		}
 		if(currentNode->getLength() <= minimum){
-			mergeParentNodes(leftIndex, currNodeIndex);
+			unsigned int leftIndex = findLeftIndex(currentNodeIndex);
+			unsigned int rightIndex = findRightIndex(currentNodeIndex);
+			mergeParentNodes(leftIndex, rightIndex,currentNodeIndex);
 		}
 		return;
 		
