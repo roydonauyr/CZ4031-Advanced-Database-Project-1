@@ -32,7 +32,7 @@ public:
 		for (unsigned int key: curNode->key){
 			std::cout<<key<<" ";
 		}
-		std::cout<<std::endl;
+		printf('\n');
 		std::cout<<"Ptrs: "<<std::endl;
 		for (Pointer ptr: curNode->ptrs){
 			std::cout<<ptr.getBlock()<<" ";
@@ -46,7 +46,7 @@ public:
 		linkedListNodeBlock* curNode = (linkedListNodeBlock*) blkManager->accessBlock(LinkedListIndex);
 		std::cout<<"Block id is: "<<(unsigned int)LinkedListIndex<<std::endl;
 		std::cout<<"Type is: "<<(unsigned int)curNode->type<<std::endl;
-		std::cout<<"Record addresses: "<<std::endl;
+		printf("Record addresses: \n");
 		for (Pointer ptr: curNode->pointers){
 			std::cout<<ptr.getBlock()<<" ";
 		}
@@ -504,7 +504,7 @@ public:
 
 	// Assuming that we have a root node, finds the block which should contain a particular key.
 	// Block need not have space to contain this key
-	unsigned int searchBlockToContain(unsigned int key){
+	unsigned int searchBlockToContain(unsigned int key) const {
 		unsigned int curIndex = rootNode;
 		treeNodeBlock* curBlock = (treeNodeBlock*) blkManager->accessBlock(rootNode);
 		if(curBlock -> type == 2){

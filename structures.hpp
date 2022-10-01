@@ -25,7 +25,7 @@ struct Record{
 public:
     fixedPoint avgRating;
     unsigned int numVotes = 0;
-    std::string getTconst(){
+    std::string getTconst() const {
         char buf[11];
         strncpy(buf, this->tconst, 10);
         buf[10] = '\0';
@@ -37,7 +37,7 @@ public:
         strncpy(tconst,input.c_str(),10);
     }
 
-    void printRecord(){
+    void printRecord() const {
         std::cout<<"----Record details----"<<std::endl;
 
         printf("Average rating is: %.1f\n",getAverageRating());
@@ -47,7 +47,7 @@ public:
     }
 
     //To be used for calculation
-    float getAverageRating(){
+    float getAverageRating() const {
         return float(avgRating.ones) + float(avgRating.decimal)/10;
     }
 
@@ -111,7 +111,7 @@ public:
         return key.size()-count;
     }
 
-    unsigned long getParentBlock(){
+    unsigned long getParentBlock() const {
         return (parentBlock[2] << 16) + (parentBlock[1] << 8) + parentBlock[0];
     }
 
