@@ -94,74 +94,82 @@ int main() {
     tree.printTreeNode(root->ptrs[0].getBlock());
     
     
-    std::cout<<std::endl<<"------Exercise 3----------"<<std::endl;
-    blkManager.clearAccessed();
-    std::vector<Record> recs = tree.searchKeys(500);
-    unsigned int totalSearchIO = blkManager.accessedTreeBlocks.size() + blkManager.accessedDataBlocks.size();
-    std::cout<<std::endl<<"Total Number of Index Nodes accessed (Unique): "<<blkManager.accessedTreeBlocks.size()<<std::endl;
-    std::cout<<std::endl<<"First 5 Unique Index Nodes accessed: "<<std::endl;
-    for(unsigned int nodeIndex: blkManager.firstTree){
-        printf("%d||", nodeIndex);
-    }
-    for(unsigned int nodeIndex: blkManager.firstTree){
-        if(blkManager.accessBlock(nodeIndex)->type == 3){
-            tree.PrintLinkedListBlock(nodeIndex);
-        }else{
-            tree.printTreeNode(nodeIndex);
-        }
-    }
-    std::cout<<std::endl<<"\n"<<"Total Number of Data Blocks accessed (Unique): "<<blkManager.accessedDataBlocks.size()<<std::endl;
-    std::cout<<std::endl<<"First 5 Unique Data Blocks accessed: "<<std::endl;
-    for(unsigned int recordBlockIndex: blkManager.firstData){
-        printf("%d||", recordBlockIndex);
-    }
-    for(unsigned int recordBlockIndex: blkManager.firstData){
-        blkManager.printRecordBlock(recordBlockIndex);
-    }
-    float averageOfAverageRating = 0.0;
-    for(Record record: recs){
-        averageOfAverageRating += record.getAverageRating();
-    }
-    averageOfAverageRating = averageOfAverageRating/recs.size();
-    std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
-    std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
+    // std::cout<<std::endl<<"------Exercise 3----------"<<std::endl;
+    // blkManager.clearAccessed();
+    // std::vector<Record> recs = tree.searchKeys(500);
+    // unsigned int totalSearchIO = blkManager.accessedTreeBlocks.size() + blkManager.accessedDataBlocks.size();
+    // std::cout<<std::endl<<"Total Number of Index Nodes accessed (Unique): "<<blkManager.accessedTreeBlocks.size()<<std::endl;
+    // std::cout<<std::endl<<"First 5 Unique Index Nodes accessed: "<<std::endl;
+    // for(unsigned int nodeIndex: blkManager.firstTree){
+    //     printf("%d||", nodeIndex);
+    // }
+    // for(unsigned int nodeIndex: blkManager.firstTree){
+    //     if(blkManager.accessBlock(nodeIndex)->type == 3){
+    //         tree.PrintLinkedListBlock(nodeIndex);
+    //     }else{
+    //         tree.printTreeNode(nodeIndex);
+    //     }
+    // }
+    // std::cout<<std::endl<<"\n"<<"Total Number of Data Blocks accessed (Unique): "<<blkManager.accessedDataBlocks.size()<<std::endl;
+    // std::cout<<std::endl<<"First 5 Unique Data Blocks accessed: "<<std::endl;
+    // for(unsigned int recordBlockIndex: blkManager.firstData){
+    //     printf("%d||", recordBlockIndex);
+    // }
+    // for(unsigned int recordBlockIndex: blkManager.firstData){
+    //     blkManager.printRecordBlock(recordBlockIndex);
+    // }
+    // float averageOfAverageRating = 0.0;
+    // for(Record record: recs){
+    //     averageOfAverageRating += record.getAverageRating();
+    // }
+    // averageOfAverageRating = averageOfAverageRating/recs.size();
+    // std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
+    // std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
 
-    std::cout<<std::endl<<"------Exercise 4----------"<<std::endl;
-    blkManager.clearAccessed();
-    recs = tree.searchRangeOfKeys(30000,40000);
-    totalSearchIO = blkManager.accessedTreeBlocks.size() + blkManager.accessedDataBlocks.size();
-    std::cout<<std::endl<<"Total Number of Index Nodes accessed (Unique): "<<blkManager.accessedTreeBlocks.size()<<std::endl;
-    std::cout<<std::endl<<"First 5 Unique Index Nodes accessed: "<<std::endl;
-    for(unsigned int nodeIndex: blkManager.firstTree){
-        printf("%d||", nodeIndex);
-    }
-    for(unsigned int nodeIndex: blkManager.firstTree){
-        if(blkManager.accessBlock(nodeIndex)->type == 3){
-            tree.PrintLinkedListBlock(nodeIndex);
-        }else{
-            tree.printTreeNode(nodeIndex);
-        }
-    }
-    std::cout<<std::endl<<"\n"<<"Total Number of Data Blocks accessed (Unique): "<<blkManager.accessedDataBlocks.size()<<std::endl;
-    std::cout<<std::endl<<"First 5 Unique Data Blocks accessed: "<<std::endl;
-    for(unsigned int recordBlockIndex: blkManager.firstData){
-        printf("%d||", recordBlockIndex);
-    }
-    for(unsigned int recordBlockIndex: blkManager.firstData){
-        blkManager.printRecordBlock(recordBlockIndex);
-    }
-    averageOfAverageRating = 0.0;
-    for(Record record: recs){
-        averageOfAverageRating += record.getAverageRating();
-        //std::cout<<std::endl<<record.getAverageRating()<<std::endl;
-    }
-    averageOfAverageRating = averageOfAverageRating/recs.size();
-    std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
-    std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
+    // std::cout<<std::endl<<"------Exercise 4----------"<<std::endl;
+    // blkManager.clearAccessed();
+    // recs = tree.searchRangeOfKeys(30000,40000);
+    // totalSearchIO = blkManager.accessedTreeBlocks.size() + blkManager.accessedDataBlocks.size();
+    // std::cout<<std::endl<<"Total Number of Index Nodes accessed (Unique): "<<blkManager.accessedTreeBlocks.size()<<std::endl;
+    // std::cout<<std::endl<<"First 5 Unique Index Nodes accessed: "<<std::endl;
+    // for(unsigned int nodeIndex: blkManager.firstTree){
+    //     printf("%d||", nodeIndex);
+    // }
+    // for(unsigned int nodeIndex: blkManager.firstTree){
+    //     if(blkManager.accessBlock(nodeIndex)->type == 3){
+    //         tree.PrintLinkedListBlock(nodeIndex);
+    //     }else{
+    //         tree.printTreeNode(nodeIndex);
+    //     }
+    // }
+    // std::cout<<std::endl<<"\n"<<"Total Number of Data Blocks accessed (Unique): "<<blkManager.accessedDataBlocks.size()<<std::endl;
+    // std::cout<<std::endl<<"First 5 Unique Data Blocks accessed: "<<std::endl;
+    // for(unsigned int recordBlockIndex: blkManager.firstData){
+    //     printf("%d||", recordBlockIndex);
+    // }
+    // for(unsigned int recordBlockIndex: blkManager.firstData){
+    //     blkManager.printRecordBlock(recordBlockIndex);
+    // }
+    // averageOfAverageRating = 0.0;
+    // for(Record record: recs){
+    //     averageOfAverageRating += record.getAverageRating();
+    //     //std::cout<<std::endl<<record.getAverageRating()<<std::endl;
+    // }
+    // averageOfAverageRating = averageOfAverageRating/recs.size();
+    // std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
+    // std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
     
     std::cout<<std::endl<<"------Exercise 5----------"<<std::endl;
     blkManager.clearAccessed();
-    tree.deleteKey(1000, 0, 0);
+    tree.deleteKey(1000);
+    std::cout<<std::endl<<"Number of times node is deleted: "<<blkManager.deletedNodes<<std::endl;
+    std::cout<<std::endl<<"Number of nodes in updated b+ tree: "<<blkManager.numTreeBlocks<<std::endl;
+    std::cout<<"Height of updated B+ tree is: "<<getHeight(&tree)<<std::endl;
+    std::cout<<"Content of root node: "<<std::endl;
+    tree.printTreeNode(tree.rootNode);
+    std::cout<<"Content of 1st child node: "<<std::endl;
+    root = (treeNodeBlock*)blkManager.accessBlock(tree.rootNode);
+    tree.printTreeNode(root->ptrs[0].getBlock());
    
     std::cout<<"DONE"<<std::endl;
 }

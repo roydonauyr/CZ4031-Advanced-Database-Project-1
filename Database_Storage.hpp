@@ -22,6 +22,7 @@ public:
     const char keyPerLinkedList = NUM_LINKED_LIST;
     unsigned long numStorageBlocks = 0;
     unsigned long numTreeBlocks = 0;
+    unsigned int deletedNodes = 0;
     unsigned int getSize() const;
     unsigned int getNumBlocks() const;
     void deleteBlock(unsigned int loc);
@@ -66,6 +67,10 @@ unsigned int BlockManager::getNumBlocks() const {
 
 void BlockManager::deleteBlock(unsigned int loc){
     loc--;
+    if(blockPtrArray[loc]->type != 0){
+        deletedNodes++;
+        numTreeBlocks--;
+    }
    delete blockPtrArray[loc];
    deletedIndex.push(loc);
    blockPtrArray[loc] = NULL;
