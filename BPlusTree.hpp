@@ -150,7 +150,10 @@ public:
 		// Now curIndex and curBlock should be leaf node
 		// iterate through leaf node
 		unsigned int j = 0;
-		// find the index of the first key that falls in the range
+		if(curBlock->key[0]>UpperBound){
+			std::cout<<"Keys in range do not exist"<<std::endl;
+			return results;
+		}
 		while (curBlock->key[0] <= UpperBound) {
 			j = 0;
 			while(curBlock->key[j]< LowerBound){

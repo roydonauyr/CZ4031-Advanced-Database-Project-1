@@ -6,7 +6,7 @@
 #include <string>
 #include <cstring>
 
-#define BLOCK_SIZE 200
+#define BLOCK_SIZE 500//200
 #define NUM_RECORDS (BLOCK_SIZE-1)/16
 #define NUM_KEY_INDEX (BLOCK_SIZE-4-4)/8
 #define NUM_LINKED_LIST (BLOCK_SIZE-1-4)/4
