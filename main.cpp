@@ -159,9 +159,9 @@ int main() {
     std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
     std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
     
-    // std::cout<<std::endl<<"------Exercise 5----------"<<std::endl;
-    // blkManager.clearAccessed();
-    // tree.deleteKey(1000, 0, 0);
+    std::cout<<std::endl<<"------Exercise 5----------"<<std::endl;
+    blkManager.clearAccessed();
+    tree.deleteKey(1000, 0, 0);
    
     std::cout<<"DONE"<<std::endl;
 }

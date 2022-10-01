@@ -32,8 +32,8 @@ public:
 		for (unsigned int key: curNode->key){
 			std::cout<<key<<" ";
 		}
-		printf('\n');
-		std::cout<<"Ptrs: "<<std::endl;
+		// printf('\n');
+		std::cout<<"\nPtrs: "<<std::endl;
 		for (Pointer ptr: curNode->ptrs){
 			std::cout<<ptr.getBlock()<<" ";
 		}
@@ -339,9 +339,10 @@ public:
 			treeNodeBlock *cursor = (treeNodeBlock*)(blkManager->accessBlock(rootNode));
 			// Loop through entire B+ tree until a leaf node is reached
 			while (cursor->type != 2) {
-				int index = 0;
 				// Find the node that might contain the key
 				for (int i = 0; i < cursor->getLength(); i++) {
+					leftSibling = i - 1;
+					rightSibling = i + 1;
 					if (key < cursor->key[i] || i == cursor->getLength()) {
 						// Go to child node
 						cursor = (treeNodeBlock*)(blkManager->accessBlock(cursor->ptrs[i].getBlock()));
@@ -349,8 +350,6 @@ public:
 						break;
 					}
 				}
-				leftSibling = index - 1;
-				rightSibling = index + 1;
 			}
 
 			currNode = cursor;
@@ -377,17 +376,14 @@ public:
 
 			// Delete linked list
 			if (blkManager->accessBlock(currNode->ptrs[index].getBlock())->type == 3) {
-				linkedListNodeBlock *toBeDeleted = (linkedListNodeBlock*)(blkManager->accessBlock(currNode->ptrs[index].getBlock()));
-				unsigned int currDelete = currNode->ptrs[index].getBlock();
-				unsigned int next = toBeDeleted->nextBlock.entry;
-
-				do {
+				linkedListNodeBlock *linkedList = (linkedListNodeBlock*) blkManager->accessBlock(currNode->ptrs[index].getBlock());
+				while (linkedList->nextBlock() != 0) {
 					blkManager->deleteBlock(currDelete);
 					currDelete = toBeDeleted->nextBlock.getBlock();
 					toBeDeleted = (linkedListNodeBlock*)(blkManager->accessBlock(toBeDeleted->nextBlock.getBlock()));
 					if (next != -1)
 						next = toBeDeleted->nextBlock.entry;
-				} while (next != -1);
+				} 
 			}
 			// Delete record
 			else if ((blkManager->accessBlock(currNode->ptrs[index].getBlock()))->type == 0) {
