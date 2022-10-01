@@ -574,14 +574,30 @@ public:
 		}
 
 		treeNodeBlock* block = (treeNodeBlock*) blkManager->accessBlock(blockNumber);
-		unsigned int parentBlockIndex = block->getParentBlock();
-		treeNodeBlock* parentBlock = (treeNodeBlock*) blkManager->accessBlock(parentBlockIndex);
-		unsigned int foundParentIndex;
+		unsigned int curParentBlockIndex = block->getParentBlock();
+		treeNodeBlock* curParentBlock = (treeNodeBlock*) blkManager->accessBlock(curParentBlockIndex);
+		unsigned int foundParentIndex = 0;
 		
-		int i = 0;
-		while(foundParentIndex!= 0 && parentBlockIndex!= rootNode){
+		while(foundParentIndex<curParentBlock->ptrs.size() && curParentBlock->ptrs[foundParentIndex].getBlock() != blockNumber){
+			foundParentIndex ++;
 		}
 
+		unsigned int prevNodeIndex;
+		unsigned int prevParentIndex = curParentBlockIndex;
+		curParentBlockIndex = curParentBlock->getParentBlock();
+
+
+		int i = 0;
+		while(foundParentIndex!= 0 && curParentBlockIndex!= rootNode){
+			foundParentIndex = 0;
+			while(foundParentIndex<curParentBlock->ptrs.size() && curParentBlock->ptrs[foundParentIndex].getBlock() != prevParentIndex){
+				foundParentIndex++;
+			}
+			prevParentIndex = curParentBlockIndex;
+			curParentBlockIndex = curParentBlock->getParentBlock();
+			level++;
+		}
+		
 		
 	}
 
