@@ -132,7 +132,6 @@ public:
 	//Search range function
 	std::vector<Record> searchRangeOfKeys(int LowerBound, int UpperBound) {
 		std::vector<Record> results;
-		std::vector<unsigned long> leaf_indexes;
 		unsigned int curIndex = rootNode;
 		treeNodeBlock* curBlock = (treeNodeBlock*) blkManager->accessBlock(rootNode);
 
@@ -154,76 +153,149 @@ public:
 		// find the index of the first key that falls in the range
 		while (curBlock->key[0] <= UpperBound) {
 			j = 0;
-			while(LowerBound<curBlock->key[0]){
+			while(curBlock->key[j]< LowerBound){
+				j++;
+			}
+
+			while(LowerBound<curBlock->key[j]){
 				LowerBound+= 1;
 			}
-			//20000 //50000
-			while (j < curBlock->getLength() && LowerBound < curBlock->key[curBlock->key.size()-1] && LowerBound < UpperBound) {
-				if(LowerBound == curBlock->key[j]){
-				   leaf_indexes.push_back(curBlock->ptrs[j].getBlock());
-				   j++;
+			//20000 20001 30001//30003 30005 //30006 40001
+			while (LowerBound <= curBlock->key[curBlock->getLength()-1] && LowerBound <= UpperBound) {
+				while(j < curBlock->getLength()){
+					if(LowerBound == curBlock->key[j]){
+						unsigned int curBlockIndex = curBlock->ptrs[j].getBlock();
+						// directly accessing record blocks, no duplicates
+						if (blkManager->accessBlock(curBlockIndex) ->type == 0) {
+							RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(curBlockIndex); 
+							unsigned int accessIndex = curBlock->ptrs[j].entry;
+							results.push_back(curRecordBlock->records[accessIndex]);
+						}
+
+						// accessing linked list for duplicates
+						else if (blkManager -> accessBlock(curBlockIndex) ->type == 3){
+							linkedListNodeBlock* linkedList = (linkedListNodeBlock*) blkManager -> accessBlock(curBlockIndex);
+
+							// for first linkedlist block
+							for(Pointer record_pointer: linkedList->pointers){
+								if(record_pointer.getBlock() == 0){
+									break;
+								}
+								// exact index of the record in the record block
+								unsigned int accessIndex = record_pointer.entry;
+								// index of the record block
+								unsigned int blockIndex = record_pointer.getBlock();
+								RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(blockIndex);
+								results.push_back(curRecordBlock->records[accessIndex]);
+							}
+							
+							// if there are more than one linkedlist block
+							while(linkedList->nextBlock.getBlock() != 0){
+								//Switch to next linkedlist block
+								unsigned int nextLinkedListIndex = linkedList->nextBlock.getBlock();
+								linkedList = (linkedListNodeBlock*) blkManager -> accessBlock(nextLinkedListIndex);
+								for(Pointer record_pointer: linkedList->pointers){
+									if(record_pointer.getBlock() == 0){
+										break;
+									}
+									unsigned int accessIndex = record_pointer.entry;
+									unsigned int blockIndex = record_pointer.getBlock();
+									RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(blockIndex);
+									results.push_back(curRecordBlock->records[accessIndex]);
+								}
+							}
+						}
+						j+=1;
+					}
+					LowerBound+=1;
+					break;
 				}
-				LowerBound+=1;
 			};
-			
+			j = 0;
 			curIndex = curBlock->ptrs[(curBlock->ptrs.size())-1].getBlock();
 			curBlock = (treeNodeBlock*) blkManager->accessBlock(curIndex);
 
 		}
-
-		if(leaf_indexes.empty()){
-			std::cout<<"Key in range not found"<<std::endl;
-			return results;
-		}
-		
-		unsigned int count = 0;
-		while (count < leaf_indexes.size()) {
-			unsigned int curBlockIndex = leaf_indexes[count];
-
-			// directly accessing record blocks, no duplicates
-			if (blkManager->accessBlock(curBlockIndex) ->type == 0) {
-				RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(curBlockIndex); 
-				unsigned int accessIndex = curBlock->ptrs[j].entry;
-				results.push_back(curRecordBlock->records[accessIndex]);
-			}
-
-			// accessing linked list for duplicates
-			else if (blkManager -> accessBlock(curBlockIndex) ->type == 3){
-				linkedListNodeBlock* linkedList = (linkedListNodeBlock*) blkManager -> accessBlock(curBlockIndex);
-
-				// for first linkedlist block
-				for(Pointer record_pointer: linkedList->pointers){
-					if(record_pointer.getBlock() == 0){
-						break;
-					}
-					// exact index of the record in the record block
-					unsigned int accessIndex = record_pointer.entry;
-					// index of the record block
-					unsigned int blockIndex = record_pointer.getBlock();
-					RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(blockIndex);
-					results.push_back(curRecordBlock->records[accessIndex]);
-				}
-				
-				// if there are more than one linkedlist block
-				while(linkedList->nextBlock.getBlock() != 0){
-					//Switch to next linkedlist block
-					unsigned int nextLinkedListIndex = linkedList->nextBlock.getBlock();
-					linkedList = (linkedListNodeBlock*) blkManager -> accessBlock(nextLinkedListIndex);
-					for(Pointer record_pointer: linkedList->pointers){
-						if(record_pointer.getBlock() == 0){
-							break;
-						}
-						unsigned int accessIndex = record_pointer.entry;
-						unsigned int blockIndex = record_pointer.getBlock();
-						RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(blockIndex);
-						results.push_back(curRecordBlock->records[accessIndex]);
-					}
-				}
-			}
-			count+=1;
-		}
 		return results;
 	}
+
+	//Search range function
+	// std::vector<Record> searchRangeOfKeys(int LowerBound, int UpperBound) {
+	// 	std::vector<Record> results;
+	// 	std::vector<unsigned int> leaf_indexes;
+	// 	unsigned int curIndex = rootNode;
+	// 	treeNodeBlock* curBlock = (treeNodeBlock*) blkManager->accessBlock(rootNode);
+
+	// 	while (curBlock -> type != 2) {  // while it is not a leaf node
+	// 		unsigned int i = 0;
+
+	// 		// search until the point where the lower bound of the range is found, if not keep iterating
+	// 		while (i < curBlock->getLength() && curBlock->key[i] <= LowerBound) {  
+	// 			i++;
+	// 		}
+	// 		curIndex = curBlock->ptrs[i].getBlock();
+	// 		curBlock = (treeNodeBlock*) blkManager->accessBlock(curIndex);
+	// 	}
+		
+
+	// 	// Now curIndex and curBlock should be leaf node
+	// 	// iterate through leaf node
+	// 	unsigned int j = 0;
+	// 	while(curBlock->key[j]<LowerBound && j < curBlock->getLength()){
+	// 		j++;
+	// 	}
+		
+	// 	// find the index of the first key that falls in the range
+	// 	while (curBlock->key[j] <= UpperBound) {
+	// 		if(j == curBlock->getLength()){
+	// 			j = 0;
+	// 			curIndex = curBlock->ptrs[(curBlock->ptrs.size())-1].getBlock();
+	// 			curBlock = (treeNodeBlock*) blkManager->accessBlock(curIndex);
+	// 		}else{
+	// 			unsigned int curBlockIndex = curBlock->ptrs[j].getBlock();
+	// 			printTreeNode(curIndex);
+	// 			if (blkManager->accessBlock(curBlockIndex) ->type == 0) {
+	// 				RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(curBlockIndex); 
+	// 				unsigned int accessIndex = curBlock->ptrs[j].entry;
+	// 				results.push_back(curRecordBlock->records[accessIndex]);
+	// 			}
+	// 			// accessing linked list for duplicates
+	// 			else if (blkManager -> accessBlock(curBlockIndex) ->type == 3){
+	// 				linkedListNodeBlock* linkedList = (linkedListNodeBlock*) blkManager -> accessBlock(curBlockIndex);
+	// 				// for first linkedlist block
+	// 				for(Pointer record_pointer: linkedList->pointers){
+	// 					if(record_pointer.getBlock() == 0){
+	// 						break;
+	// 					}
+	// 					// exact index of the record in the record block
+	// 					unsigned int accessIndex = record_pointer.entry;
+	// 					// index of the record block
+	// 					unsigned int blockIndex = record_pointer.getBlock();
+	// 					RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(blockIndex);
+	// 					results.push_back(curRecordBlock->records[accessIndex]);
+	// 				}
+					
+	// 				// if there are more than one linkedlist block
+	// 				while(linkedList->nextBlock.getBlock() != 0){
+	// 					//Switch to next linkedlist block
+	// 					unsigned int nextLinkedListIndex = linkedList->nextBlock.getBlock();
+	// 					linkedList = (linkedListNodeBlock*) blkManager -> accessBlock(nextLinkedListIndex);
+	// 					for(Pointer record_pointer: linkedList->pointers){
+	// 						if(record_pointer.getBlock() == 0){
+	// 							break;
+	// 						}
+	// 						unsigned int accessIndex = record_pointer.entry;
+	// 						unsigned int blockIndex = record_pointer.getBlock();
+	// 						RecordBlock* curRecordBlock = (RecordBlock*)blkManager->accessBlock(blockIndex);
+	// 						results.push_back(curRecordBlock->records[accessIndex]);
+	// 					}
+	// 				}
+	// 			}
+	// 			j++;
+	// 		}
+	// 	}
+	// 	return results;
+	// }
 
 	void deleteKey(unsigned int key, unsigned int curr, unsigned int child) {
 		// Check if key is valid
@@ -438,7 +510,7 @@ public:
 		while(curBlock -> type != 2){
 			unsigned int i = 0;
 			// C 1 A 4 B
-			while(i<curBlock->getLength() && key>curBlock->key[i]){
+			while(i<curBlock->getLength() && key>=curBlock->key[i]){
 				i++;
 			}
 			curIndex = curBlock->ptrs[i].getBlock();
@@ -551,21 +623,23 @@ public:
 			for(Pointer p: curBlock->ptrs){
 				pointers.push_back(p);
 			}
+			//Add in new pointer as well
+			pointers.push_back(ptr);
 			unsigned int i = 0;
 			while(i<curBlock->key.size()){
 				curBlock->ptrs[i].setBlock(0);
-				curBlock->ptrs[i].entry=0;
+				curBlock->ptrs[i].entry=-1;
 				curBlock->key[i] = 0;
 				i++;
 			}
 			curBlock->ptrs[curBlock->ptrs.size()-1].setBlock(0);
-			curBlock->ptrs[curBlock->ptrs.size()-1].entry=0;
+			curBlock->ptrs[curBlock->ptrs.size()-1].entry=-1;
 			std::sort(pointers.begin(), pointers.end(), [&](Pointer a, Pointer b){
 				unsigned int aKey = lowestBound((treeNodeBlock*)blkManager->accessBlock(a.getBlock()));
 				unsigned int bKey = lowestBound((treeNodeBlock*)blkManager->accessBlock(b.getBlock()));
 				return aKey < bKey;
 			});
-			unsigned int ptrInNewNode = curBlock->key.size() / 2;
+			unsigned int ptrInNewNode = (curBlock->key.size() / 2)+1;
 			unsigned int ptrInCurNode = pointers.size() - ptrInNewNode;
 
 			unsigned int newTreeNodeIndex = blkManager->createIndexBlock();
