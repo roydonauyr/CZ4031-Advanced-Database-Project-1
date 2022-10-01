@@ -70,10 +70,11 @@ int main() {
     tree.insert(test->records[0].numVotes, ptr);
     //Records.size()
     // while(i<Records.size()){
-    while(i<100000){
+    while(i<Records.size()){
         ptr.setBlock(curBlockIndex);
         ptr.entry=i%blkManager.recordsPerBlock;
         //std::cout<<std::endl<<"INSERTING: "<<curBlock->records[i%blkManager.recordsPerBlock].numVotes<<" PTR: "<<ptr.getBlock()<<std::endl;
+        //std::cout<<std::endl<<"INSERTING: "<<curBlock->records[i%blkManager.recordsPerBlock].numVotes<<std::endl;
         tree.insert(curBlock->records[i%blkManager.recordsPerBlock].numVotes, ptr);
         if((i%blkManager.recordsPerBlock) == (blkManager.recordsPerBlock-1)){
             curBlockIndex++;
@@ -91,7 +92,8 @@ int main() {
     // std::cout<<"Content of 1st child node: "<<std::endl;
     // treeNodeBlock* root = (treeNodeBlock*)blkManager.accessBlock(tree.rootNode);
     // tree.printTreeNode(root->ptrs[0].getBlock());
-    
+    // tree.printTreeNode(89206);
+
     
     // std::cout<<std::endl<<"------Exercise 3----------"<<std::endl;
     // blkManager.clearAccessed();
@@ -152,17 +154,15 @@ int main() {
     float averageOfAverageRating = 0.0;
     for(Record record: recs){
         averageOfAverageRating += record.getAverageRating();
+        //std::cout<<std::endl<<record.getAverageRating()<<std::endl;
     }
     averageOfAverageRating = averageOfAverageRating/recs.size();
     std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
     std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
-
-    std::cout<<std::endl<<"------Exercise 4----------"<<std::endl;
-    blkManager.clearAccessed();
-
-
-    std::cout<<std::endl<<"------Exercise 5----------"<<std::endl;
-    tree.deleteKey(1000, 0, 0);
+    //std::cout<<std::endl<<"Total results: "<<recs.size()<<std::endl;
+    // std::cout<<std::endl<<"------Exercise 5----------"<<std::endl;
+    // blkManager.clearAccessed();
+    // tree.deleteKey(1000, 0, 0);
    
     std::cout<<"DONE"<<std::endl;
 }
