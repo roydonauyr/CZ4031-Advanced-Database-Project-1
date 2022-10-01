@@ -67,9 +67,9 @@ int main() {
     std::cout<<"Number of blocks used by storage is: "<<numBlocksStore<<std::endl;
     //std::cout<<"*TEST* Number of blocks used acc to blkManager"<<blkManager.numStorageBlocks<<std::endl;
     std::cout<<"Size used by storage is: "<<numBlocksStore * blkManager.blkSize<<"B"<<std::endl;
-    tree.insert(test->records[0].numVotes, ptr);
+    // tree.insert(test->records[0].numVotes, ptr);
     //Records.size()
-    while(i<100000){
+    while(i<100001){
 
         ptr.setBlock(curBlockIndex);
         ptr.entry=i%blkManager.recordsPerBlock;
@@ -124,6 +124,12 @@ int main() {
     // averageOfAverageRating = averageOfAverageRating/recs.size();
     // std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
     // std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
+    std::cout<<std::endl<<"------Test----------"<<std::endl;
+    tree.printTreeNode(tree.rootNode);
+    std::cout<<"Content of 1st child node: "<<std::endl;
+    treeNodeBlock* root = (treeNodeBlock*)blkManager.accessBlock(tree.rootNode);
+    tree.printTreeNode(root->ptrs[0].getBlock());
+    
 
     std::cout<<std::endl<<"------Exercise 4----------"<<std::endl;
     blkManager.clearAccessed();
@@ -152,10 +158,12 @@ int main() {
     float averageOfAverageRating = 0.0;
     for(Record record: recs){
         averageOfAverageRating += record.getAverageRating();
+        //std::cout<<std::endl<<"Value added"<<record.getAverageRating()<<std::endl;
     }
+    std::cout<<std::endl<<"\n"<<"Record size: "<<recs.size()<<std::endl;
     averageOfAverageRating = averageOfAverageRating/recs.size();
     std::cout<<std::endl<<"\n"<<"Average of average ratings of all records: "<<averageOfAverageRating<<std::endl;
     std::cout<<std::endl<<"Total SearchIO: "<<totalSearchIO<<std::endl;
-    
+    tree.PrintLinkedListBlock(6101);
     std::cout<<"DONE"<<std::endl;
 }
