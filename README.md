@@ -6,7 +6,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/roydonauyr/CZ4031-Advanced-Database-Project-1)
 
 The aim of this project is to implement a B+ Tree in C++ which supports searching (both search
-query and range queries), insertion and deletion operations.
+and range queries), insertion and deletion operations.
 
 Our implementation consists of the following classes:
 1. BlockManager: Manages the creation and deletion of new blocks. Handles all the logic
